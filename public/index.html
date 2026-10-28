@@ -860,7 +860,7 @@
             ["14:28", "Lan đã chấm 92/100 cho logo v2", "Kiểm tra"],
             ["13:55", "Chị đã thanh toán cọc 645.000đ", "Xác nhận"]
           ].map(function (f) { return "<li><time>" + f[0] + '</time><span class="x-tl__dot" aria-hidden="true"></span><div><p>' + f[1] + '</p><span class="x-label">' + f[2] + "</span></div></li>"; }).join("") + "</ol>";
-          return pageHead("Logo Mộc An", "Đang làm · " + bar(62).replace('class="x-bar"', 'class="x-bar" style="min-width:160px"') + " · dự kiến 16:30 28/10", backLink("c-08", "Đơn hàng")) +
+          return pageHead("Logo Mộc An", "Đang làm " + bar(62).replace('class="x-bar"', 'class="x-bar" style="min-width:160px;display:inline-flex;vertical-align:middle"') + " dự kiến 16:30 28/10", backLink("c-08", "Đơn hàng")) +
             '<section class="x-box x-pad">' + steps + "</section>" +
             '<div class="x-grid2"><section aria-label="Diễn biến">' + feed + '</section><aside class="x-box x-pad"><h2>Đội đang làm</h2>' +
             '<ul class="x-rows">' + AGENTS.slice(0, 2).map(function (a) { return '<li>' + av(a.key, "x-av--s") + '<div class="x-grow"><b>' + a.name + '</b><span class="x-label">' + a.task + "</span></div></li>"; }).join("") + "</ul></aside></div>";
