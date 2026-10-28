@@ -11,3 +11,18 @@ AI freelancer / AI creative studio cho SMEs Việt Nam: khách đặt thiết k�
 
 ## Quyết định đang chờ
 D1 cổng thanh toán (payOS/SePay) · D2 tỷ lệ cọc · D6 queue · D10 ngân sách model
+
+## Chạy ứng dụng (lát MVP đầu tiên)
+
+Đã có: engine báo giá (`src/lib/pricing.ts`), state machine job (`src/lib/job-machine.ts`), trang chủ và báo giá nhanh (`src/app/`), API `POST /api/quote`.
+Chưa có: database và thanh toán payOS, đăng nhập, chat AI, worker OpenClaw, admin. Xem `docs/02-spec.md` để biết phạm vi.
+
+```bash
+npm install
+npm test        # 16 test lõi nghiệp vụ
+npm run typecheck
+npm run build
+npm start
+```
+
+Giá trong catalog là giá tạm từ prototype, chưa phải bảng giá chốt.
