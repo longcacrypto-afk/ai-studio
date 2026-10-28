@@ -636,12 +636,31 @@
             input.value = ""; input.style.height = "auto";
             if (!typing) return;
             typing.style.display = "";
-            setTimeout(function () {
-              if (!typing.isConnected) return;
-              tmp.innerHTML = msgAI('<p class="x-msg__text">Dạ em đã ghi vào brief. Chuyên viên sẽ duyệt lại trước khi chốt báo giá ạ.</p>', "Vừa xong");
-              box.insertBefore(tmp.firstChild, typing);
-              typing.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
-            }, 1300);
+            fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: v, state: window.__intake || {} }) })
+              .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+              .then(function (res) {
+                if (!typing.isConnected) return;
+                if (!res.ok) throw new Error(res.body.error || "error");
+                var b = res.body; window.__intake = b.state;
+                var html = '<p class="x-msg__text">' + b.text.replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }) + "</p>";
+                if (b.quote) {
+                  html += '<article class="x-quote" aria-label="Báo giá từ hệ thống"><div class="x-quote__top"><b>Báo giá</b><span class="x-mono">Từ bảng giá</span></div><ul class="x-lines">' +
+                    b.quote.items.map(function (i) { return line(i.label, i.amount.toLocaleString("vi-VN") + "đ"); }).join("") +
+                    line("Tạm tính", b.quote.total.toLocaleString("vi-VN") + "đ", "x-lines__total") +
+                    line("Cọc 50%", b.quote.deposit.toLocaleString("vi-VN") + "đ", "x-lines__dep") + "</ul>" +
+                    '<div class="x-quote__act"><button type="button" class="x-btn x-btn--primary" data-go="c-05">Xem báo giá</button></div></article>';
+                }
+                if (b.handoff) html += '<p class="x-label">Đã chuyển cho chuyên viên.</p>';
+                tmp.innerHTML = msgAI(html, "Vừa xong");
+                box.insertBefore(tmp.firstChild, typing);
+                typing.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+              })
+              .catch(function () {
+                if (!typing.isConnected) return;
+                tmp.innerHTML = msgAI('<p class="x-msg__text">Trợ lý đang bận, chị thử gửi lại nhé.</p>', "Vừa xong");
+                box.insertBefore(tmp.firstChild, typing);
+              })
+              .finally(function () { if (typing.isConnected) typing.style.display = "none"; });
           });
         }
         SCREENS.push({ id: "p-02", name: "Chat với trợ lý AI", group: "Khách hàng", render: renderP02, after: afterP02, nav: "chat" });
@@ -790,12 +809,29 @@
           { code: "Q-2610-024", svc: "camp", name: "Bộ 10 post Facebook", total: "1.850.000đ", until: "—", st: ["done", "Đã chấp nhận"], tab: "accepted" },
           { code: "Q-2609-011", svc: "video", name: "Video khai trương 15s", total: "2.400.000đ", until: "hết hạn 02/10", st: ["queue", "Hết hạn"], tab: "expired" }
         ];
+        var LIVE_QUOTES = null;
+        function loadQuotes() {
+          if (LIVE_QUOTES !== null || window.__quotesLoading) return;
+          window.__quotesLoading = true;
+          fetch("/api/quotes").then(function (r) { return r.json(); }).then(function (b) {
+            LIVE_QUOTES = (b.quotes || []).map(function (q) {
+              var st = q.status === "accepted" ? ["done", "Đã chấp nhận"] : q.status === "sent" ? ["wait", "Chờ bạn chấp nhận"] : ["queue", "Hết hạn"];
+              return { code: q.code, svc: "design", name: "Logo tối giản + bộ nhận diện mini", total: Number(q.total).toLocaleString("vi-VN") + "đ",
+                until: q.valid_until ? new Date(q.valid_until).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" }) : "—",
+                st: st, tab: q.status === "accepted" ? "accepted" : q.status === "sent" ? "pending" : "expired" };
+            });
+            render("c-04", true);
+          }).catch(function () { LIVE_QUOTES = []; render("c-04", true); });
+        }
         function renderC04() {
+          loadQuotes();
+          var QUOTES = LIVE_QUOTES !== null ? LIVE_QUOTES : [];
           var tab = (window.__quoteTab || "pending");
           var tabs = [["pending", "Đang chờ"], ["accepted", "Đã chấp nhận"], ["expired", "Hết hạn"]].map(function (t) {
             return '<button type="button" class="x-tab' + (t[0] === tab ? " is-on" : "") + '" data-action="quoteTab" data-tab="' + t[0] + '">' + t[1] + "</button>";
           }).join("");
           var rows = QUOTES.filter(function (q) { return q.tab === tab; });
+          if (LIVE_QUOTES === null) rows = [];
           var body = listOrSkeleton(function () {
             if (!rows.length) return '<div class="x-box">' + empty("Không có báo giá nào ở mục này.") + "</div>";
             return '<div class="x-box"><table class="x-table"><thead><tr><th>Mã</th><th>Dịch vụ</th><th>Hiệu lực</th><th>Trạng thái</th><th>Tổng</th></tr></thead><tbody>' +
@@ -809,8 +845,20 @@
         ACTIONS.quoteTab = function (t) { window.__quoteTab = t.getAttribute("data-tab"); render("c-04", true); };
 
         /* C-05 Chi tiết báo giá */
+        var QUOTE_STATUS = null;
+        function loadQuoteStatus() {
+          if (QUOTE_STATUS !== null || window.__qsLoading) return;
+          window.__qsLoading = true;
+          fetch("/api/quotes").then(function (r) { return r.json(); }).then(function (b) {
+            var q = (b.quotes || []).filter(function (x) { return x.code === "Q-2610-031"; })[0];
+            QUOTE_STATUS = q ? q.status : "missing";
+            if (QUOTE_STATUS === "accepted") window.__quoteAccepted = true;
+            render("c-05", true);
+          }).catch(function () { QUOTE_STATUS = "error"; render("c-05", true); });
+        }
         function renderC05() {
-          var accepted = window.__quoteAccepted === true;
+          loadQuoteStatus();
+          var accepted = window.__quoteAccepted === true || QUOTE_STATUS === "accepted";
           var lines = '<ul class="x-lines">' + line("Logo tối giản", "990.000đ") + '<li class="x-lines__sub">1 phương án chính + 2 biến thể</li>' +
             line("Bộ nhận diện mini", "300.000đ") + '<li class="x-lines__sub">Danh thiếp, ly</li>' +
             line("Tạm tính", "1.290.000đ", "x-lines__total") + line("Cọc 50%", "645.000đ", "x-lines__dep") + "</ul>";
@@ -824,10 +872,18 @@
             '<aside class="x-box x-pad"><h2>Tóm tắt brief</h2><dl class="x-brief-dl">' + BRIEF.map(function (b) { return kv(b[0], b[1]); }).join("") + "</dl></aside></div>" +
             '<section class="x-box x-pad">' + act + "</section>";
         }
-        ACTIONS.acceptQuote = function () {
+        ACTIONS.acceptQuote = function (t) {
           var box = document.getElementById("x-agree");
           if (!box || !box.checked) { toast("Chị cần đồng ý điều khoản trước khi chấp nhận"); return; }
-          window.__quoteAccepted = true; render("c-05", true); toast("Đã chấp nhận báo giá. Mời chị thanh toán cọc");
+          if (t) t.disabled = true;
+          fetch("/api/quotes/Q-2610-031/accept", { method: "POST" })
+            .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+            .then(function (res) {
+              if (!res.ok) { toast(res.body.error || "Không chấp nhận được báo giá"); if (t) t.disabled = false; return; }
+              window.__quoteAccepted = true; render("c-05", true);
+              toast("Đã chấp nhận báo giá. Mời chị thanh toán cọc");
+            })
+            .catch(function () { toast("Mất kết nối. Thử lại sau"); if (t) t.disabled = false; });
         };
         ACTIONS.rejectQuote = function () { toast("Đã ghi lý do từ chối. Chuyên viên sẽ liên hệ"); };
 
