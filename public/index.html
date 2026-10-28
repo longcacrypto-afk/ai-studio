@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Studio UI v2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="/prototype/hark.css" />
+    <link rel="stylesheet" href="/prototype/hark-hero.css" />
+    <style>
+      :root { color-scheme: light; }
+      .x-root {
+        --x-ink: #171717; --x-ink-2: #525252; --x-ink-3: #737373;
+        --x-line: #ebebeb; --x-soft: #f5f5f5; --x-hover: #f0f0f0; --x-side: #fafafa;
+        --x-accent: #5e5ce6; --x-accent-ink: #4f4dd6;
+        --x-green: #16a34a; --x-amber: #d97706; --x-grey: #a3a3a3;
+        --x-r: 6px; --x-r2: 10px;
+        --x-ease: cubic-bezier(.23, 1, .32, 1);
+        font-family: "Geist", system-ui, sans-serif;
+        color: var(--x-ink); background: #fff;
+        font-size: 14px; line-height: 1.5; font-weight: 400;
+        min-height: 100vh;
+      }
+      .x-root *, .x-root *::before, .x-root *::after { box-sizing: border-box; }
+      :where(.x-root) :where(button) { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+      .x-root input, .x-root textarea { font: inherit; color: inherit; }
+      .x-root h1, .x-root h2, .x-root h3 { font-weight: 500; letter-spacing: -0.01em; line-height: 1.3; }
+      .x-root b, .x-root strong { font-weight: 500; }
+      .x-num { font-variant-numeric: tabular-nums; }
+      .x-mono { font-family: "Geist Mono", ui-monospace, monospace; font-size: 12px; }
+      .x-ico { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+      .x-ico--s { width: 14px; height: 14px; }
+      .x-ico--l { width: 20px; height: 20px; }
+
+      /* ---------- app shell ---------- */
+      .x-app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+
+      /* ---------- sidebar ---------- */
+      .x-side { background: var(--x-side); border-right: 1px solid var(--x-line); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; position: sticky; top: 0; height: 100vh; }
+      .x-logo { display: flex; align-items: center; gap: 10px; padding: 4px 8px 14px; }
+      .x-logo__mark { width: 24px; height: 24px; border-radius: var(--x-r); background: var(--x-ink); color: #fff; display: grid; place-items: center; }
+      .x-logo__mark .x-ico { width: 14px; height: 14px; }
+      .x-logo__name { font-weight: 500; font-size: 14px; line-height: 1.2; }
+      .x-logo__sub { font-size: 12px; color: var(--x-ink-3); line-height: 1.3; }
+      .x-side__label { font-size: 12px; color: var(--x-ink-3); padding: 14px 8px 4px; }
+      .x-navi { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 32px; padding: 6px 8px; border-radius: var(--x-r); color: var(--x-ink-2); font-size: 13px; text-align: left; transition: background .15s, color .15s; }
+      .x-navi:hover { background: var(--x-hover); color: var(--x-ink); }
+      .x-navi.is-active { background: var(--x-hover); color: var(--x-ink); font-weight: 500; }
+      .x-navi.is-active .x-ico { color: var(--x-accent); }
+      .x-navi__count { margin-left: auto; font-size: 12px; color: var(--x-ink-3); font-weight: 400; font-variant-numeric: tabular-nums; }
+      .x-navi__count--hot { color: var(--x-accent); font-weight: 500; }
+      .x-side__spacer { flex: 1; min-height: 16px; }
+      .x-user { display: flex; align-items: center; gap: 10px; padding: 12px 8px 2px; border-top: 1px solid var(--x-line); }
+      .x-user__name { font-weight: 500; font-size: 13px; line-height: 1.3; }
+      .x-user__role { font-size: 12px; color: var(--x-ink-3); }
+
+      /* ---------- avatars ---------- */
+      .x-av { width: 28px; height: 28px; border-radius: 50%; flex: none; object-fit: cover; display: grid; place-items: center; font-weight: 500; font-size: 12px; color: var(--x-ink-2); background: var(--x-hover); }
+      .x-av--s { width: 24px; height: 24px; font-size: 12px; }
+      .x-av--ai { background: var(--x-ink); color: #fff; }
+      .x-av--ai .x-ico { width: 13px; height: 13px; }
+
+      /* ---------- main / topbar ---------- */
+      .x-main { min-width: 0; display: flex; flex-direction: column; }
+      .x-top { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 24px; border-bottom: 1px solid var(--x-line); background: #fff; position: sticky; top: 0; z-index: 30; }
+      .x-search { flex: 1; max-width: 380px; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px 0 10px; border: 1px solid var(--x-line); border-radius: var(--x-r); color: var(--x-ink-3); }
+      .x-search:focus-within { border-color: #d4d4d4; }
+      .x-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 13px; color: var(--x-ink); }
+      .x-search input::placeholder { color: var(--x-ink-3); }
+      .x-kbd { font-family: "Geist Mono", monospace; font-size: 12px; padding: 0 5px; border-radius: 4px; border: 1px solid var(--x-line); color: var(--x-ink-3); }
+      .x-top__end { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+      .x-iconbtn { position: relative; width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--x-r); color: var(--x-ink-2); }
+      .x-iconbtn:hover { background: var(--x-soft); }
+      .x-iconbtn__dot { position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--x-accent); }
+
+      /* ---------- buttons, links, status ---------- */
+      .x-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid transparent; border-radius: var(--x-r); font-weight: 500; font-size: 13px; white-space: nowrap; text-decoration: none; transition: background .15s, border-color .15s; }
+      .x-btn--primary { background: var(--x-accent); color: #fff !important; }
+      .x-btn--primary:hover { background: var(--x-accent-ink); }
+      .x-btn--ghost { background: #fff; border-color: var(--x-line); color: var(--x-ink) !important; }
+      .x-btn--ghost:hover { background: var(--x-soft); }
+      .x-btn--s { min-height: 28px; padding: 0 10px; }
+      .x-link { display: inline-flex; align-items: center; gap: 4px; min-height: 28px; color: var(--x-accent); font-size: 13px; font-weight: 500; text-decoration: none; }
+      .x-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+      .x-st { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--x-ink-2); white-space: nowrap; }
+      .x-st::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--c, var(--x-grey)); flex: none; }
+      .x-st--run { --c: var(--x-accent); }
+      .x-st--done { --c: var(--x-green); }
+      .x-st--wait { --c: var(--x-amber); }
+      .x-st--queue { --c: var(--x-grey); }
+
+      /* ---------- screen ---------- */
+      .x-screen { padding: 28px 32px 56px; display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+      .x-screen--c-02 { max-width: 1080px; width: 100%; }
+      .x-hello { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+      .x-hello h1 { font-size: 20px; }
+      .x-hello__sub { color: var(--x-ink-3); font-size: 13px; margin-top: 2px; }
+      .x-hello__end { margin-left: auto; }
+      .x-label { font-size: 12px; color: var(--x-ink-3); }
+
+      /* bordered box + section heads */
+      .x-box { border: 1px solid var(--x-line); border-radius: var(--x-r2); min-width: 0; }
+      .x-box__head { display: flex; align-items: baseline; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--x-line); }
+      .x-sec__head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; min-height: 28px; }
+      .x-box__head h2, .x-sec__head h2 { font-size: 14px; }
+      .x-sec__head .x-link { margin-left: auto; }
+      .x-count { font-size: 13px; color: var(--x-ink-3); font-variant-numeric: tabular-nums; }
+
+      /* action rows */
+      .x-rows { list-style: none; margin: 0; padding: 0; }
+      .x-rows > li { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--x-line); }
+      .x-rows > li:first-child { border-top: 0; }
+      .x-rows__body { flex: 1; min-width: 0; }
+      .x-rows__title { font-size: 14px; font-weight: 500; line-height: 1.4; }
+      .x-rows__sub { font-size: 13px; color: var(--x-ink-3); }
+      .x-rows__note { flex: 1; min-width: 0; font-size: 13px; color: var(--x-ink-2); }
+
+      /* orders table */
+      .x-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      .x-table th { text-align: left; font-weight: 400; font-size: 12px; color: var(--x-ink-3); padding: 0 12px 8px; border-bottom: 1px solid var(--x-line); white-space: nowrap; }
+      .x-table td { padding: 11px 12px; border-bottom: 1px solid var(--x-line); vertical-align: middle; color: var(--x-ink-2); }
+      .x-table th:first-child, .x-table td:first-child { padding-left: 0; }
+      .x-table th:last-child, .x-table td:last-child { padding-right: 0; text-align: right; }
+      .x-table__name { color: var(--x-ink); font-weight: 500; font-size: 14px; }
+      .x-table__svc { display: block; font-size: 12px; color: var(--x-ink-3); }
+      .x-who { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+      .x-bar { display: flex; align-items: center; gap: 10px; min-width: 120px; }
+      .x-bar__track { flex: 1; height: 4px; border-radius: 2px; background: var(--x-hover); overflow: hidden; }
+      .x-bar__track i { display: block; height: 100%; border-radius: 2px; background: var(--x-accent); }
+      .x-bar__pct { font-family: "Geist Mono", monospace; font-size: 12px; color: var(--x-ink-3); width: 36px; text-align: right; }
+      .x-eta { font-family: "Geist Mono", monospace; font-size: 12px; color: var(--x-ink-2); white-space: nowrap; }
+
+      /* activity + month */
+      .x-split { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 40px; }
+      .x-tl { list-style: none; margin: 0; padding: 0; }
+      .x-tl li { display: grid; grid-template-columns: 44px 14px minmax(0, 1fr); gap: 0 10px; padding: 8px 0; }
+      .x-tl time { font-family: "Geist Mono", monospace; font-size: 12px; color: var(--x-ink-3); padding-top: 1px; }
+      .x-tl__dot { position: relative; }
+      .x-tl__dot::before { content: ""; position: absolute; left: 4px; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: #d4d4d4; }
+      .x-tl li:first-child .x-tl__dot::before { background: var(--x-accent); }
+      .x-tl li:not(:last-child) .x-tl__dot::after { content: ""; position: absolute; left: 6.5px; top: 19px; bottom: -14px; width: 1px; background: var(--x-line); }
+      .x-tl p { font-size: 13px; color: var(--x-ink-2); }
+      .x-tl p b { color: var(--x-ink); }
+      .x-stats { list-style: none; margin: 0; padding: 0; }
+      .x-stats li { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--x-line); font-size: 13px; color: var(--x-ink-2); }
+      .x-stats li:first-child { border-top: 0; padding-top: 4px; }
+      .x-stats b { font-size: 14px; color: var(--x-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+      /* empty + skeleton */
+      .x-empty { padding: 16px; display: grid; justify-items: start; gap: 8px; color: var(--x-ink-3); font-size: 13px; }
+      .x-sk { display: block; border-radius: 4px; background: linear-gradient(90deg, #f2f2f2 25%, #f8f8f8 50%, #f2f2f2 75%); background-size: 200% 100%; animation: x-shim 1.4s linear infinite; }
+      @keyframes x-shim { to { background-position: -200% 0; } }
+      .x-skrow { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+      .x-skcol { flex: 1; display: grid; gap: 7px; }
+
+      /* ---------- prototype switcher ---------- */
+      .x-proto { position: fixed; bottom: 16px; right: 16px; z-index: 50; display: flex; gap: 8px; align-items: center; }
+      .x-proto__pill, .x-states { background: #fff; border: 1px solid var(--x-line); border-radius: var(--x-r); }
+      .x-proto__pill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; font-size: 13px; }
+      .x-proto__tag { font-family: "Geist Mono", monospace; font-size: 12px; color: var(--x-ink-3); }
+      .x-states { display: flex; padding: 2px; gap: 2px; }
+      .x-states button { height: 28px; padding: 0 10px; border-radius: 4px; font-size: 12px; color: var(--x-ink-2); }
+      .x-states button[aria-pressed="true"] { background: var(--x-hover); color: var(--x-ink); font-weight: 500; }
+      .x-menu { position: absolute; bottom: 42px; right: 0; width: 280px; background: #fff; border: 1px solid var(--x-line); border-radius: var(--x-r2); padding: 6px; box-shadow: 0 12px 32px -12px rgba(0, 0, 0, .18); display: none; }
+      .x-menu.is-open { display: block; }
+      .x-menu__group { font-size: 12px; color: var(--x-ink-3); padding: 8px 8px 4px; }
+      .x-menu button { display: flex; width: 100%; align-items: center; gap: 10px; min-height: 34px; padding: 6px 8px; border-radius: var(--x-r); text-align: left; font-size: 13px; }
+      .x-menu button:hover:not(:disabled) { background: var(--x-soft); }
+      .x-menu button.is-active { background: var(--x-hover); font-weight: 500; }
+      .x-menu button:disabled { color: var(--x-ink-3); cursor: default; }
+      .x-menu button .x-mono { color: var(--x-ink-3); width: 38px; }
+      .x-menu__soon { margin-left: auto; font-size: 12px; color: var(--x-ink-3); }
+
+      .x-toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 8px); opacity: 0; background: var(--x-ink); color: #fff; padding: 9px 14px; border-radius: var(--x-r); font-size: 13px; z-index: 80; pointer-events: none; transition: opacity .2s, transform .2s var(--x-ease); max-width: calc(100vw - 32px); }
+      .x-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+      /* ---------- bottom tabs (mobile) ---------- */
+      .x-tabs { display: none; }
+
+      /* ---------- responsive ---------- */
+      @media (max-width: 900px) {
+        .x-app { grid-template-columns: minmax(0, 1fr); }
+        .x-side { display: none; }
+        .x-top { height: 56px; padding: 0 16px; }
+        .x-search { height: 44px; }
+        .x-iconbtn { width: 44px; height: 44px; }
+        .x-screen { padding: 20px 16px 150px; gap: 24px; }
+        .x-split { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+        .x-proto { bottom: calc(72px + env(safe-area-inset-bottom)); right: 12px; }
+        .x-proto__pill { height: 44px; }
+        .x-states button { height: 44px; min-width: 44px; }
+        .x-tabs { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: #fff; border-top: 1px solid var(--x-line); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); }
+        .x-tabs button { display: grid; justify-items: center; gap: 2px; min-height: 52px; padding: 6px 2px; color: var(--x-ink-3); font-size: 12px; position: relative; }
+        .x-tabs button.is-active { color: #5e5ce6; font-weight: 500; }
+        .x-tabs .x-tabs__dot { position: absolute; top: 6px; left: calc(50% + 6px); width: 6px; height: 6px; border-radius: 50%; background: var(--x-accent); }
+        .x-btn, .x-btn--s, .x-link { min-height: 44px; }
+        .x-toast { bottom: calc(136px + env(safe-area-inset-bottom)); }
+        #x-proto-name { display: none; }
+      }
+      @media (max-width: 700px) {
+        .x-search .x-kbd { display: none; }
+        .x-hello__end { margin-left: 0; width: 100%; }
+        .x-hello__end .x-btn { width: 100%; }
+        .x-rows > li { flex-wrap: wrap; }
+        .x-rows > li > .x-btn { width: 100%; }
+        .x-table thead { display: none; }
+        .x-table, .x-table tbody { display: block; }
+        .x-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; padding: 12px 0; border-bottom: 1px solid var(--x-line); }
+        .x-table td { display: block; padding: 0 !important; border: 0; text-align: left !important; }
+        .x-table td:nth-child(1) { grid-column: 1; grid-row: 1; }
+        .x-table td:nth-child(4) { grid-column: 2; grid-row: 1; justify-self: end; }
+        .x-table td:nth-child(2) { grid-column: 1; grid-row: 2; }
+        .x-table td:nth-child(5) { grid-column: 2; grid-row: 2; justify-self: end; align-self: center; }
+        .x-table td:nth-child(5)::before { content: "Giao "; font-family: "Geist", sans-serif; color: var(--x-ink-3); }
+        .x-table td:nth-child(3) { grid-column: 1 / -1; grid-row: 3; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .x-root *, .x-root *::before, .x-root *::after { animation: none !important; transition: none !important; }
+      }
+      /* ---------- P-02 chat ---------- */
+      .x-screen--p-02 { padding: 0; gap: 0; }
+      .x-chat { display: grid; grid-template-columns: 260px minmax(0, 1fr) 280px; min-height: calc(100vh - 53px); }
+      .x-convs { border-right: 1px solid var(--x-line); padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .x-convs h2 { font-size: 14px; padding: 0 8px 10px; }
+      .x-conv { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: var(--x-r); text-align: left; width: 100%; transition: background .15s; }
+      .x-conv:hover { background: var(--x-soft); }
+      .x-conv.is-active { background: var(--x-hover); }
+      .x-conv__body { flex: 1; min-width: 0; }
+      .x-conv__name { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 13px; line-height: 1.3; }
+      .x-conv__last { font-size: 12px; color: var(--x-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+      .x-conv__time { font-size: 12px; color: var(--x-ink-3); align-self: flex-start; font-variant-numeric: tabular-nums; }
+      .x-badge-ai { font-family: "Geist Mono", monospace; font-size: 12px; font-weight: 400; color: var(--x-ink-3); border: 1px solid var(--x-line); border-radius: 4px; padding: 0 4px; line-height: 16px; }
+      .x-unread { min-width: 18px; height: 18px; border-radius: 9px; background: var(--x-accent); color: #fff; font-size: 12px; display: grid; place-items: center; padding: 0 5px; }
+
+      .x-thread { display: flex; flex-direction: column; min-width: 0; }
+      .x-thread__head { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--x-line); flex-wrap: wrap; }
+      .x-thread__head h2 { font-size: 14px; }
+      .x-thread__head p { font-size: 12px; color: var(--x-ink-3); }
+      .x-thread__head .x-btn { margin-left: auto; }
+      .x-msgs { flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 24px; width: 100%; max-width: 760px; margin: 0 auto; }
+      .x-daysep { align-self: center; font-size: 12px; color: var(--x-ink-3); }
+      .x-msg { display: flex; gap: 10px; align-items: flex-start; max-width: 100%; }
+      .x-msg__col { display: grid; gap: 10px; min-width: 0; flex: 1; justify-items: start; }
+      .x-msg__text { font-size: 14px; line-height: 1.6; padding-top: 1px; }
+      .x-msg--me { align-self: flex-end; max-width: min(520px, 85%); }
+      .x-msg--me .x-msg__col { justify-items: end; }
+      .x-bubble { background: var(--x-soft); padding: 9px 13px; border-radius: var(--x-r2); font-size: 14px; line-height: 1.5; }
+      .x-msg__time { font-size: 12px; color: var(--x-ink-3); }
+      .x-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .x-qchip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--x-line); border-radius: var(--x-r); background: #fff; color: var(--x-ink-2); font-size: 13px; transition: background .15s, border-color .15s; }
+      .x-qchip:hover { background: var(--x-soft); }
+      .x-qchip[aria-pressed="true"] { border-color: var(--x-accent); color: var(--x-accent); }
+
+      /* quote card */
+      .x-quote { border: 1px solid var(--x-line); border-radius: var(--x-r2); padding: 16px; width: min(420px, 100%); display: grid; gap: 14px; background: #fff; }
+      .x-quote__top { display: flex; align-items: baseline; gap: 8px; }
+      .x-quote__top b { font-size: 14px; }
+      .x-quote__top .x-mono { margin-left: auto; color: var(--x-ink-3); }
+      .x-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 12px; color: var(--x-ink-2); }
+      .x-lines li { display: flex; align-items: baseline; gap: 8px; }
+      .x-lines li > span:first-child { min-width: 0; }
+      .x-lead { flex: 1; min-width: 12px; border-bottom: 1px dotted #c4c4c4; transform: translateY(-3px); }
+      .x-lines b { font-weight: 400; color: var(--x-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .x-lines .x-lines__sub { color: var(--x-ink-3); margin: -4px 0 4px; }
+      .x-lines .x-lines__total { border-top: 1px solid var(--x-line); padding-top: 8px; margin-top: 4px; }
+      .x-lines .x-lines__dep { color: var(--x-ink); }
+      .x-lines .x-lines__dep b { font-weight: 500; font-size: 13px; }
+      .x-terms { font-size: 12px; color: var(--x-ink-3); }
+      .x-quote__act { display: flex; gap: 8px; flex-wrap: wrap; }
+      .x-typing { display: inline-flex; gap: 4px; padding: 8px 0; }
+      .x-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--x-grey); animation: x-blink 1.2s infinite; }
+      .x-typing i:nth-child(2) { animation-delay: .15s; } .x-typing i:nth-child(3) { animation-delay: .3s; }
+      @keyframes x-blink { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+
+      /* composer */
+      .x-composer { padding: 12px 24px 16px; width: 100%; max-width: 760px; margin: 0 auto; position: sticky; bottom: 0; background: #fff; }
+      .x-composer__box { display: flex; align-items: flex-end; gap: 2px; min-height: 44px; border: 1px solid var(--x-line); border-radius: var(--x-r2); background: #fff; transition: border-color .15s; }
+      .x-composer__box:focus-within { border-color: #d4d4d4; }
+      .x-composer textarea { flex: 1; border: 0; outline: 0; background: none; resize: none; height: 42px; min-height: 42px; max-height: 140px; padding: 11px 4px; font-size: 14px; line-height: 20px; }
+      .x-composer textarea::placeholder { color: var(--x-ink-3); }
+      .x-composer .x-iconbtn { width: 42px; height: 42px; }
+      .x-send { width: 34px; height: 34px; margin: 4px; border-radius: var(--x-r); background: var(--x-accent); color: #fff; display: grid; place-items: center; flex: none; }
+      .x-send:hover { background: var(--x-accent-ink); }
+      .x-hint { font-size: 12px; color: var(--x-ink-3); margin-top: 8px; display: flex; gap: 6px; align-items: center; }
+
+      /* brief */
+      .x-brief { border-left: 1px solid var(--x-line); padding: 16px 20px; display: grid; gap: 10px; align-content: start; align-self: start; position: sticky; top: 53px; }
+      .x-brief__head { display: flex; align-items: baseline; gap: 8px; }
+      .x-brief__head h2 { font-size: 14px; }
+      .x-brief__head .x-mono { margin-left: auto; color: var(--x-ink-3); }
+      .x-brief dl { margin: 0; display: grid; }
+      .x-brief dl > div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-top: 1px solid var(--x-line); }
+      .x-brief dl > div:first-child { border-top: 0; }
+      .x-brief dt { font-size: 13px; color: var(--x-ink-3); }
+      .x-brief dd { margin: 0; font-size: 13px; color: var(--x-ink); transition: opacity .3s; }
+      .x-brief dl > div:not(.is-filled) dd { opacity: .35; }
+
+      /* modal */
+      .x-modal { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: rgba(23, 23, 23, .4); animation: x-fade .2s both; }
+      @keyframes x-fade { from { opacity: 0; } }
+      .x-modal__card { width: min(360px, 100%); background: #fff; border: 1px solid var(--x-line); border-radius: var(--x-r2); padding: 20px; display: grid; gap: 14px; text-align: center; position: relative; }
+      .x-modal__close { position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--x-r); color: var(--x-ink-3); }
+      .x-qr { width: 184px; height: 184px; margin: 0 auto; padding: 10px; border-radius: var(--x-r2); border: 1px solid var(--x-line); }
+      .x-modal__amt { font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; }
+      .x-vietqr { font-weight: 500; font-size: 14px; } .x-vietqr span { color: #e3242b; }
+
+      @media (max-width: 1199.98px) { .x-chat { grid-template-columns: 240px minmax(0, 1fr); } .x-brief { display: none; } }
+      @media (max-width: 900px) {
+        .x-screen--p-02 { padding: 0 0 150px; }
+        .x-chat { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+        .x-convs { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--x-line); padding: 8px 12px; gap: 6px; scrollbar-width: none; }
+        .x-convs h2 { display: none; }
+        .x-conv { flex: none; width: auto; max-width: 240px; min-height: 44px; }
+        .x-conv__time { display: none; }
+        .x-thread__head { padding: 12px 16px; }
+        .x-msgs { padding: 20px 16px; }
+        .x-composer { position: static; padding: 12px 16px; }
+        .x-qchip { min-height: 44px; }
+        .x-send { width: 42px; height: 42px; margin: 0; }
+      }
+      @media (max-width: 480px) { .x-thread__head .x-btn span { display: none; } .x-conv__last { max-width: 150px; } }
+    </style>
+  </head>
+  <body>
+    <div class="x-root" id="top">
+      <!-- static image assets, cloned into rendered screens -->
+      <div hidden id="x-assets">
+        <img data-asset="mai" src="/prototype/mai-thiet-ke.jpg" alt="" />
+        <img data-asset="khoa" src="/prototype/khoa-video.jpg" alt="" />
+        <img data-asset="minh" src="/prototype/minh-web.jpg" alt="" />
+        <img data-asset="lan" src="/prototype/lan-kiem-tra.jpg" alt="" />
+      </div>
+
+      <div class="x-proto">
+        <div class="x-states" role="group" aria-label="Trạng thái dữ liệu">
+          <button type="button" data-state="data" aria-pressed="true">Dữ liệu</button>
+          <button type="button" data-state="loading" aria-pressed="false">Đang tải</button>
+          <button type="button" data-state="empty" aria-pressed="false">Trống</button>
+        </div>
+        <div style="position: relative">
+          <button type="button" class="x-proto__pill" id="x-proto-btn" aria-haspopup="true" aria-expanded="false">
+            <span class="x-proto__tag">Prototype</span> <span id="x-proto-name">màn hình</span>
+            <svg class="x-ico x-ico--s" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          <div class="x-menu" id="x-menu" role="menu"></div>
+        </div>
+      </div>
+
+      <div class="x-app">
+        <aside class="x-side" aria-label="Điều hướng">
+          <div class="x-logo">
+            <span class="x-logo__mark"><svg class="x-ico" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2Z" /></svg></span>
+            <div><p class="x-logo__name">AI Studio</p><p class="x-logo__sub">Studio sáng tạo AI</p></div>
+          </div>
+          <nav id="x-sidenav"></nav>
+          <div class="x-side__spacer"></div>
+          <div class="x-user">
+            <span class="x-av">MA</span>
+            <div><p class="x-user__name">Quán Mộc An</p><p class="x-user__role">Khách hàng</p></div>
+          </div>
+        </aside>
+
+        <div class="x-main">
+          <header class="x-top">
+            <label class="x-search">
+              <svg class="x-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+              <input type="search" placeholder="Tìm đơn, file, tin nhắn…" aria-label="Tìm kiếm" />
+              <span class="x-kbd">⌘K</span>
+            </label>
+            <div class="x-top__end">
+              <button type="button" class="x-iconbtn" aria-label="Thông báo, có tin mới" data-toast="2 thông báo mới">
+                <svg class="x-ico" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                <span class="x-iconbtn__dot"></span>
+              </button>
+              <span class="x-av" aria-label="Ngọc Hân">NH</span>
+            </div>
+          </header>
+          <main id="x-screen"></main>
+        </div>
+      </div>
+
+      <nav class="x-tabs" id="x-tabs" aria-label="Điều hướng chính"></nav>
+      <div class="x-toast" id="x-toast" role="status" aria-live="polite"></div>
+    </div>
+    <script src="/prototype/hark.js"></script>
+    <script>
+      /* ===== AI Studio prototype ===== */
+      (function () {
+        /* ---------- icons (Lucide-style paths) ---------- */
+        var I = {
+          search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+          bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+          plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+          grid: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+          box: '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+          chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+          folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+          card: '<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>',
+          palette: '<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.6 1.6 0 0 1 1.7-1.7h2c3 0 5.5-2.5 5.5-5.5C22 6 17.5 2 12 2z"/>',
+          sliders: '<path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+          user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+          spark: '<path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/>',
+          video: '<path d="m16 13 5.2 3.1a.5.5 0 0 0 .8-.4V8.3a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+          globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+          mega: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+          pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+          check: '<path d="M20 6 9 17l-5-5"/>',
+          checkc: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+          qr: '<rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+          arrow: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+          up: '<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+          clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+          coins: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/>',
+          eye: '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+          clip: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+          send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+          inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+          headset: '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+          help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+          cal: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>',
+          layers: '<path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+          bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+          pie: '<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+          activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+          users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+          shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+          x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+          monitor: '<rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>'
+        };
+        function ic(n, cls) { return '<svg class="x-ico' + (cls ? " " + cls : "") + '" viewBox="0 0 24 24" aria-hidden="true">' + I[n] + "</svg>"; }
+
+        /* ---------- data ---------- */
+        var SVC = {
+          design: { name: "Thiết kế", c: "coral", hex: "#ff7a59", icon: "pen" },
+          video: { name: "Video", c: "pink", hex: "#ec4899", icon: "video" },
+          web: { name: "Website", c: "teal", hex: "#14b8a6", icon: "globe" },
+          camp: { name: "Chiến dịch", c: "amber", hex: "#f5a524", icon: "mega" }
+        };
+        var AGENTS = [
+          { key: "mai", name: "Mai · Thiết kế", role: "Nhận diện, logo, post", svc: "design", st: "busy", task: "Dựng phương án 2 logo Mộc An trên Figma", pts: [3, 5, 4, 7, 6, 8, 7, 9] },
+          { key: "khoa", name: "Khoa · Video", role: "Video ngắn, TikTok", svc: "video", st: "wait", task: "Chờ chị chọn nhạc nền cho video 15s", pts: [2, 4, 6, 5, 6, 4, 3, 3] },
+          { key: "minh", name: "Minh · Web", role: "Landing page", svc: "web", st: "free", task: "Landing page đặt bàn đang xếp hàng", pts: [5, 3, 4, 2, 3, 2, 1, 2] },
+          { key: "lan", name: "Lan · Kiểm tra", role: "Kiểm tra chất lượng", svc: "camp", st: "busy", task: "Đã chấm logo v2, soát lại chi tiết", pts: [4, 4, 6, 5, 7, 8, 7, 9] }
+        ];
+        var ST = { busy: "Đang làm", wait: "Chờ", free: "Rảnh" };
+        var ORDERS = [
+          { name: "Logo Mộc An", svc: "design", who: "mai", pct: 62, st: ["run", "Đang làm"], eta: "16:30 28/10" },
+          { name: "Video khai trương 15s", svc: "video", who: "khoa", pct: 35, st: ["wait", "Chờ chị"], eta: "18:00 29/10" },
+          { name: "Landing page đặt bàn", svc: "web", who: "minh", pct: 10, st: ["queue", "Xếp hàng"], eta: "12:00 02/11" },
+          { name: "Bộ 10 post Facebook", svc: "camp", who: "mai", pct: 100, st: ["done", "Hoàn tất"], eta: "11:20 27/10" }
+        ];
+
+        /* ---------- helpers ---------- */
+        var state = "data";
+        function av(key, cls, alt) { return '<img class="x-av' + (cls ? " " + cls : "") + '" data-a="' + key + '" alt="' + (alt || "") + '" />'; }
+        function agent(key) { return AGENTS.filter(function (a) { return a.key === key; })[0]; }
+        function pick(data, sk, empty) { return state === "loading" ? sk() : state === "empty" ? empty() : data(); }
+        function sk(w, h, extra) { return '<span class="x-sk' + (extra || "") + '" style="width:' + w + ";height:" + h + 'px"></span>'; }
+        function skRows(n, btn) {
+          var s = "";
+          for (var i = 0; i < n; i++) s += '<div class="x-skrow">' + sk("24px", 24) + '<div class="x-skcol">' + sk("60%", 12) + sk("40%", 10) + "</div>" + (btn ? sk("80px", 28) : "") + "</div>";
+          return s;
+        }
+        function empty(text, btn, go) {
+          return '<div class="x-empty"><p>' + text + "</p>" + (btn ? '<button type="button" class="x-link"' + (go ? ' data-go="' + go + '"' : ' data-toast="Có ở vòng sau"') + ">" + btn + "</button>" : "") + "</div>";
+        }
+        function bar(pct) {
+          return '<div class="x-bar"><div class="x-bar__track" role="progressbar" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100" aria-label="Tiến độ"><i style="width:' + pct + '%"></i></div><span class="x-bar__pct">' + pct + "%</span></div>";
+        }
+
+        /* ---------- C-02 Tổng quan khách hàng ---------- */
+        function renderC02() {
+          // prototype is pinned to Wed 28/10/2026, afternoon
+          var todoN = state === "data" ? "2 việc" : "0 việc";
+          var head = '<div class="x-hello"><div><h1>Chào chị Ngọc Hân</h1><p class="x-hello__sub">Thứ Tư, 28/10/2026 · ' + todoN + " cần chị xử lý</p></div>" +
+            '<div class="x-hello__end"><button type="button" class="x-btn x-btn--primary" data-go="p-02">' + ic("plus", "x-ico--s") + "Đặt việc mới</button></div></div>";
+
+          var todoData = [
+            { t: "Duyệt bản nháp logo Mộc An", s: "v2 sẵn sàng · 18 phút trước", b: "Xem bản nháp", primary: true, attr: 'data-toast="Mở bản nháp logo v2"' },
+            { t: "Thanh toán phần còn lại 645.000đ", s: 'Đơn <span class="x-mono">AIS-2610-0142</span>', b: "Quét QR", attr: 'data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142"' }
+          ];
+          var todo = '<section class="x-box" aria-label="Cần chị xử lý"><div class="x-box__head"><h2>Cần chị xử lý</h2>' + (state === "data" ? '<span class="x-count">3</span>' : "") + "</div>" + pick(function () {
+            return '<ul class="x-rows">' + todoData.map(function (r) {
+              return '<li><div class="x-rows__body"><p class="x-rows__title x-num">' + r.t + '</p><p class="x-rows__sub">' + r.s + '</p></div><button type="button" class="x-btn x-btn--s ' + (r.primary ? "x-btn--primary" : "x-btn--ghost") + '" ' + r.attr + ">" + r.b + "</button></li>";
+            }).join("") +
+              '<li>' + av("khoa", "x-av--s", "Khoa") + '<p class="x-rows__note"><b>Khoa</b> hỏi: video 15s cần nhạc nền?</p><button type="button" class="x-link" data-go="p-02">Trả lời ' + ic("arrow", "x-ico--s") + "</button></li></ul>";
+          }, function () { return skRows(3, true); }, function () { return empty("Không có việc nào chờ chị. Đội AI sẽ báo khi cần."); }) + "</section>";
+
+          var orders = '<section aria-label="Đơn đang chạy"><div class="x-sec__head"><h2>Đơn đang chạy</h2>' + (state === "data" ? '<span class="x-count">4</span>' : "") + '<button type="button" class="x-link" data-toast="Danh sách đơn có ở vòng sau">Tất cả đơn</button></div>' + pick(function () {
+            return '<table class="x-table"><thead><tr><th scope="col">Đơn</th><th scope="col">Người làm</th><th scope="col">Tiến độ</th><th scope="col">Trạng thái</th><th scope="col">Dự kiến giao</th></tr></thead><tbody>' +
+              ORDERS.map(function (o) {
+                var a = agent(o.who), first = a.name.split(" · ")[0];
+                return '<tr><td><span class="x-table__name">' + o.name + '</span><span class="x-table__svc">' + SVC[o.svc].name + '</span></td><td><span class="x-who">' + av(o.who, "x-av--s", a.name) + first + "</span></td><td>" + bar(o.pct) + '</td><td><span class="x-st x-st--' + o.st[0] + '">' + o.st[1] + '</span></td><td><span class="x-eta">' + o.eta + "</span></td></tr>";
+              }).join("") + "</tbody></table>";
+          }, function () { return '<div class="x-box">' + skRows(4) + "</div>"; }, function () { return '<div class="x-box">' + empty("Chị chưa có đơn nào. Kể cho trợ lý AI nghe chị cần gì nhé.", "Đặt việc mới", "p-02") + "</div>"; }) + "</section>";
+
+          var feedData = [
+            { t: "<b>Lan · Kiểm tra</b> đã chấm <b>92/100</b> cho logo v2", time: "14:28" },
+            { t: "<b>Mai</b> đã tạo 6 hướng ý tưởng", time: "14:09" },
+            { t: "<b>Chị</b> đã thanh toán cọc <b>645.000đ</b>", time: "13:55" }
+          ];
+          var feed = '<section aria-label="Hoạt động"><div class="x-sec__head"><h2>Hoạt động</h2><span class="x-count">Hôm nay</span></div>' + pick(function () {
+            return '<ol class="x-tl">' + feedData.map(function (f) { return '<li><time>' + f.time + '</time><span class="x-tl__dot" aria-hidden="true"></span><p>' + f.t + "</p></li>"; }).join("") + "</ol>";
+          }, function () { return '<div style="display:grid;gap:14px;padding-top:6px">' + sk("80%", 12) + sk("60%", 12) + sk("70%", 12) + "</div>"; }, function () { return '<p class="x-label" style="padding-top:6px">Chưa có hoạt động nào hôm nay.</p>'; }) + "</section>";
+
+          var month = '<section aria-label="Tháng 10"><div class="x-sec__head"><h2>Tháng 10</h2></div>' + pick(function () {
+            return '<ul class="x-stats"><li>Đơn hoàn tất<b>4</b></li><li>Giao sớm trung bình<b>3,5 giờ</b></li><li>Credit còn lại<b>6/10</b></li></ul>';
+          }, function () { return '<div style="display:grid;gap:14px;padding-top:6px">' + sk("100%", 12) + sk("100%", 12) + sk("100%", 12) + "</div>"; }, function () {
+            return '<ul class="x-stats"><li>Đơn hoàn tất<b>0</b></li><li>Giao sớm trung bình<b>—</b></li><li>Credit còn lại<b>—</b></li></ul>';
+          }) + "</section>";
+
+          return head + todo + orders + '<div class="x-split">' + feed + month + "</div>";
+        }
+
+        /* ---------- SCREENS registry (later rounds push more) ---------- */
+        var SCREENS = [
+          { id: "c-02", name: "Tổng quan khách hàng", group: "Khách hàng", render: renderC02, nav: "home" }
+        ];
+        var PLANNED = [
+          { id: "C-04", name: "Chi tiết đơn & tiến độ", group: "Khách hàng" },
+          { id: "A-01", name: "Bàn duyệt của chủ studio", group: "Quản trị" },
+          { id: "A-03", name: "Báo giá & thanh toán", group: "Quản trị" },
+          { id: "V-01", name: "Hàng việc nhà cung cấp", group: "Nhà cung cấp" }
+        ];
+        /* ---------- P-02 Chat với trợ lý AI ---------- */
+        var aiAv = '<span class="x-av x-av--s x-av--ai" aria-hidden="true">' + ic("spark", "x-ico--s") + "</span>";
+        var BRIEF = [
+          ["Thương hiệu", "Mộc An"], ["Ngành", "Cà phê"], ["Phong cách", "Tối giản"], ["Màu", "Nâu · Xanh rêu"], ["Hạn", "48 giờ"]
+        ];
+        function msgAI(html, time) { return '<div class="x-msg">' + aiAv + '<div class="x-msg__col">' + html + (time ? '<span class="x-msg__time">' + time + "</span>" : "") + "</div></div>"; }
+        function msgMe(text, time) { return '<div class="x-msg x-msg--me"><div class="x-msg__col"><div class="x-bubble">' + text + "</div>" + (time ? '<span class="x-msg__time">' + time + "</span>" : "") + "</div></div>"; }
+        function line(label, amt, cls) { return '<li' + (cls ? ' class="' + cls + '"' : "") + "><span>" + label + '</span><i class="x-lead" aria-hidden="true"></i><b>' + amt + "</b></li>"; }
+        function receipt() {
+          return '<article class="x-quote" aria-label="Báo giá Q-2610-031"><div class="x-quote__top"><b>Báo giá</b><span class="x-mono">Q-2610-031</span></div>' +
+            '<ul class="x-lines">' + line("Logo tối giản", "990.000đ") + '<li class="x-lines__sub">1 phương án chính + 2 biến thể</li>' +
+            line("Bộ nhận diện mini", "300.000đ") + '<li class="x-lines__sub">Danh thiếp, ly</li>' +
+            line("Tạm tính", "1.290.000đ", "x-lines__total") + line("Cọc 50%", "645.000đ", "x-lines__dep") + "</ul>" +
+            '<p class="x-terms">3 lượt sửa · Giao 48 giờ · Hạn <span class="x-num">23:59 30/10/2026</span></p>' +
+            '<div class="x-quote__act"><button type="button" class="x-btn x-btn--primary" data-action="qr" data-amt="645.000đ" data-ref="Q-2610-031">Chấp nhận & quét QR</button><button type="button" class="x-btn x-btn--ghost" data-action="ask">Hỏi thêm</button></div></article>';
+        }
+        function renderP02() {
+          var convs = [
+            { n: "Trợ lý báo giá", ai: true, last: "Báo giá Q-2610-031 đã sẵn sàng", time: "14:32", av: '<span class="x-av x-av--ai">' + ic("spark") + "</span>", active: true },
+            { n: "Đơn AIS-2610-0142", last: "Mai: phương án 2 đang dựng", time: "14:09", av: av("mai", "", "Mai"), unread: 2 },
+            { n: "Hỗ trợ", last: "Chuyên viên của studio", time: "Hôm qua", av: '<span class="x-av">' + ic("headset", "x-ico--s") + "</span>" }
+          ];
+          var list = '<aside class="x-convs" aria-label="Cuộc trò chuyện"><h2>Tin nhắn</h2>' + pick(function () {
+            return convs.map(function (c) {
+              return '<button type="button" class="x-conv' + (c.active ? " is-active" : "") + '"' + (c.active ? ' aria-current="true"' : ' data-toast="Cuộc trò chuyện này có ở vòng sau"') + ">" + c.av + '<span class="x-conv__body"><span class="x-conv__name">' + c.n + (c.ai ? ' <span class="x-badge-ai">AI</span>' : "") + '</span><span class="x-conv__last" style="display:block">' + c.last + "</span></span>" + (c.unread ? '<span class="x-unread">' + c.unread + "</span>" : '<span class="x-conv__time">' + c.time + "</span>") + "</button>";
+            }).join("");
+          }, function () { return skRows(3); }, function () { return '<p class="x-label" style="padding:6px">Chưa có cuộc trò chuyện nào.</p>'; }) + "</aside>";
+
+          var msgs = pick(function () {
+            return '<span class="x-daysep">Hôm nay · 14:30</span>' +
+              msgAI('<p class="x-msg__text">Chào chị, em là trợ lý AI của AI Studio. Chị cần làm gì hôm nay?</p><div class="x-chips">' +
+                ["Logo", "Video TikTok", "Landing page", "Bộ post"].map(function (c) { return '<button type="button" class="x-qchip" data-action="quick">' + c + "</button>"; }).join("") + "</div>") +
+              msgMe("Mình cần logo cho tiệm cà phê Mộc An ở Biên Hòa, phong cách tối giản, tông nâu xanh", "14:31") +
+              msgAI('<p class="x-msg__text">Dạ em hiểu rồi. Chị muốn làm chỉ logo, hay logo kèm bộ nhận diện (danh thiếp, ly) ạ?</p><div class="x-chips" role="group" aria-label="Phạm vi">' +
+                '<button type="button" class="x-qchip" data-action="opt" aria-pressed="false">Chỉ logo</button><button type="button" class="x-qchip" data-action="opt" aria-pressed="true">' + ic("check", "x-ico--s") + "Logo + bộ nhận diện</button></div>") +
+              msgAI('<p class="x-msg__text">Em gửi chị báo giá. Chị xem rồi chốt giúp em nhé.</p>' + receipt(), "14:32") +
+              '<div class="x-msg" id="x-typing">' + aiAv + '<div class="x-typing" aria-label="Trợ lý đang soạn"><i></i><i></i><i></i></div></div>';
+          }, function () {
+            return [70, 50, 80].map(function (w, i) { return '<div class="x-msg' + (i === 1 ? " x-msg--me" : "") + '" style="width:100%">' + (i === 1 ? "" : '<span class="x-sk" style="width:24px;height:24px;border-radius:50%;flex:none"></span>') + '<span class="x-sk" style="width:' + w + '%;height:' + (i === 2 ? 160 : 40) + 'px;border-radius:10px' + (i === 1 ? ";margin-left:auto" : "") + '"></span></div>'; }).join("");
+          }, function () {
+            return '<div style="margin:auto">' + empty("Bắt đầu bằng một câu: chị cần làm gì cho thương hiệu?") + "</div>";
+          });
+
+          var thread = '<section class="x-thread" aria-label="Trò chuyện với trợ lý AI"><header class="x-thread__head"><span class="x-av x-av--ai">' + ic("spark") + '</span><div><h2>Trợ lý AI</h2><p>Trả lời trong vài giây</p></div><button type="button" class="x-btn x-btn--ghost x-btn--s" data-toast="Đang nối máy với chuyên viên…">' + ic("headset", "x-ico--s") + "<span>Nói chuyện với người</span></button></header>" +
+            '<div class="x-msgs" id="x-msgs" aria-live="polite">' + msgs + "</div>" +
+            '<form class="x-composer" id="x-composer"><div class="x-composer__box"><button type="button" class="x-iconbtn" aria-label="Đính kèm file" data-toast="Đính kèm có ở vòng sau">' + ic("clip") + '</button><textarea rows="1" id="x-input" placeholder="Nhắn cho trợ lý AI…" aria-label="Tin nhắn"></textarea><button type="submit" class="x-send" aria-label="Gửi">' + ic("send") + "</button></div>" +
+            '<p class="x-hint">' + ic("shield", "x-ico--s") + "AI có thể sai, chuyên viên duyệt mọi báo giá trước khi chốt</p></form></section>";
+
+          var brief = '<aside class="x-brief" aria-label="Brief"><div class="x-brief__head"><h2>Brief</h2>' + (state === "data" ? '<span id="x-briefn" class="x-mono">0/5</span>' : "") + "</div>" + pick(function () {
+            return '<dl id="x-brief">' + BRIEF.map(function (b) { return "<div><dt>" + b[0] + "</dt><dd>" + b[1] + "</dd></div>"; }).join("") + "</dl>";
+          }, function () { return '<div style="display:grid;gap:14px;padding-top:6px">' + sk("100%", 12) + sk("100%", 12) + sk("100%", 12) + sk("100%", 12) + sk("100%", 12) + "</div>"; }, function () { return '<p class="x-label">Brief sẽ tự điền khi chị trò chuyện với trợ lý.</p>'; }) + "</aside>";
+
+          return '<div class="x-chat">' + list + thread + brief + "</div>";
+        }
+        function afterP02(root) {
+          var rows = root.querySelectorAll("#x-brief > div"), bar = root.querySelector("#x-briefbar"), n = root.querySelector("#x-briefn");
+          var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          [].forEach.call(rows, function (r, i) {
+            setTimeout(function () {
+              if (!r.isConnected) return;
+              r.classList.add("is-filled"); if (n) n.textContent = i + 1 + "/" + rows.length;
+            }, reduce ? 0 : 500 + i * 420);
+          });
+          var form = root.querySelector("#x-composer"), input = root.querySelector("#x-input");
+          if (input) {
+            input.addEventListener("input", function () { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 140) + "px"; });
+            input.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+          }
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var v = input.value.trim(); if (!v) return;
+            var box = root.querySelector("#x-msgs"), typing = root.querySelector("#x-typing");
+            var esc = v.replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
+            var tmp = document.createElement("div"); tmp.innerHTML = msgMe(esc, "Vừa xong");
+            var mine = tmp.firstChild;
+            if (typing) box.insertBefore(mine, typing); else box.appendChild(mine);
+            input.value = ""; input.style.height = "auto";
+            if (!typing) return;
+            typing.style.display = "";
+            setTimeout(function () {
+              if (!typing.isConnected) return;
+              tmp.innerHTML = msgAI('<p class="x-msg__text">Dạ em đã ghi vào brief. Chuyên viên sẽ duyệt lại trước khi chốt báo giá ạ.</p>', "Vừa xong");
+              box.insertBefore(tmp.firstChild, typing);
+              typing.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+            }, 1300);
+          });
+        }
+        SCREENS.push({ id: "p-02", name: "Chat với trợ lý AI", group: "Khách hàng", render: renderP02, after: afterP02, nav: "chat" });
+
+        /* ---------- shell: nav, tabs, switcher ---------- */
+        var NAV = [
+          { label: "Không gian", items: [
+            { t: "Tổng quan", i: "grid", go: "c-02", k: "home" },
+            { t: "Đơn hàng", i: "box", n: "3", k: "orders" },
+            { t: "Chat với AI", i: "chat", go: "p-02", n: "1", hot: true, k: "chat" },
+            { t: "Thông báo", i: "bell", n: "2", k: "notif" },
+            { t: "File bàn giao", i: "folder", k: "files" }
+          ] },
+          { label: "Tài khoản", items: [
+            { t: "Thanh toán", i: "card", k: "pay" },
+            { t: "Brand kit", i: "palette", k: "brand" },
+            { t: "Cài đặt", i: "sliders", k: "settings" }
+          ] }
+        ];
+        var TABS = [
+          { t: "Tổng quan", i: "grid", go: "c-02", k: "home" },
+          { t: "Đơn hàng", i: "box", k: "orders" },
+          { t: "Chat", i: "chat", go: "p-02", k: "chat" },
+          { t: "Thông báo", i: "bell", k: "notif", dot: true },
+          { t: "Tài khoản", i: "user", k: "account" }
+        ];
+        function goAttr(it) { return it.go ? ' data-go="' + it.go + '"' : ' data-toast="' + it.t + ' có ở vòng sau"'; }
+        document.getElementById("x-sidenav").innerHTML = NAV.map(function (g) {
+          return '<p class="x-side__label">' + g.label + "</p>" + g.items.map(function (it) {
+            return '<button type="button" class="x-navi" data-k="' + it.k + '"' + goAttr(it) + ">" + ic(it.i) + "<span>" + it.t + "</span>" + (it.n ? '<span class="x-navi__count' + (it.hot ? " x-navi__count--hot" : "") + '">' + it.n + "</span>" : "") + "</button>";
+          }).join("");
+        }).join("");
+        document.getElementById("x-tabs").innerHTML = TABS.map(function (it) {
+          return '<button type="button" data-k="' + it.k + '"' + goAttr(it) + ">" + ic(it.i) + "<span>" + it.t + "</span>" + (it.dot ? '<span class="x-tabs__dot"></span>' : "") + "</button>";
+        }).join("");
+
+        var menu = document.getElementById("x-menu"), protoBtn = document.getElementById("x-proto-btn");
+        function buildMenu(cur) {
+          var html = "";
+          ["Khách hàng", "Quản trị", "Nhà cung cấp"].forEach(function (g) {
+            html += '<p class="x-menu__group">' + g + "</p>";
+            SCREENS.filter(function (s) { return s.group === g; }).forEach(function (s) {
+              html += '<button type="button" role="menuitem" data-go="' + s.id + '" class="' + (s.id === cur ? "is-active" : "") + '"><span class="x-mono">' + s.id.toUpperCase() + "</span>" + s.name + "</button>";
+            });
+            PLANNED.filter(function (s) { return s.group === g; }).forEach(function (s) {
+              html += '<button type="button" role="menuitem" disabled><span class="x-mono">' + s.id + "</span>" + s.name + '<span class="x-menu__soon">Sắp có</span></button>';
+            });
+          });
+          menu.innerHTML = html;
+        }
+        function setMenu(open) { menu.classList.toggle("is-open", open); protoBtn.setAttribute("aria-expanded", String(open)); }
+
+        /* ---------- router ---------- */
+        var ASSETS = {};
+        [].forEach.call(document.querySelectorAll("#x-assets img"), function (im) { ASSETS[im.getAttribute("data-asset")] = im.src; });
+        var screenEl = document.getElementById("x-screen"), current = null;
+        function render(id, keepScroll) {
+          var s = SCREENS.filter(function (x) { return x.id === id; })[0] || SCREENS[0];
+          current = s;
+          screenEl.className = "x-screen x-screen--" + s.id;
+          screenEl.innerHTML = s.render();
+          [].forEach.call(screenEl.querySelectorAll("img[data-a]"), function (im) { im.src = ASSETS[im.getAttribute("data-a")]; });
+          [].forEach.call(document.querySelectorAll(".x-navi, .x-tabs button"), function (b) { b.classList.toggle("is-active", b.getAttribute("data-k") === s.nav); });
+          document.getElementById("x-proto-name").textContent = s.id.toUpperCase() + " · " + s.name;
+          document.title = s.name + " · AI Studio";
+          buildMenu(s.id);
+          if (s.after) s.after(screenEl);
+          if (!keepScroll) window.scrollTo(0, 0);
+        }
+        function go(id) { if (location.hash !== "#" + id) history.pushState(null, "", "#" + id); render(id); }
+        window.addEventListener("popstate", function () { render(location.hash.slice(1)); });
+
+        var toastEl = document.getElementById("x-toast"), toastT;
+        function toast(msg) { toastEl.textContent = msg; toastEl.classList.add("is-on"); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove("is-on"); }, 2200); }
+
+        document.addEventListener("click", function (e) {
+          var t = e.target.closest("[data-go],[data-toast],[data-state],[data-action],#x-proto-btn");
+          if (!t) { if (!e.target.closest("#x-menu")) setMenu(false); return; }
+          if (t.id === "x-proto-btn") { setMenu(!menu.classList.contains("is-open")); return; }
+          if (t.hasAttribute("data-state")) {
+            state = t.getAttribute("data-state");
+            [].forEach.call(document.querySelectorAll("[data-state]"), function (b) { b.setAttribute("aria-pressed", String(b === t)); });
+            render(current.id, true); return;
+          }
+          if (t.hasAttribute("data-go")) { e.preventDefault(); setMenu(false); go(t.getAttribute("data-go")); return; }
+          if (t.hasAttribute("data-action") && ACTIONS[t.getAttribute("data-action")]) { e.preventDefault(); ACTIONS[t.getAttribute("data-action")](t); return; }
+          if (t.hasAttribute("data-toast")) { e.preventDefault(); toast(t.getAttribute("data-toast")); }
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") { setMenu(false); if (ACTIONS.closeModal) ACTIONS.closeModal(); }
+          if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); document.querySelector(".x-search input").focus(); }
+        });
+        var ACTIONS = {
+          qr: function () { toast("Mở VietQR · 645.000đ cho đơn AIS-2610-0142"); }
+        };
+        function qrSVG(seedStr) {
+          var N = 25, seed = 0, cells = "";
+          for (var k = 0; k < seedStr.length; k++) seed = (seed * 31 + seedStr.charCodeAt(k)) >>> 0;
+          function rnd() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
+          function finder(x, y) { return x < 8 && y < 8 || x >= N - 8 && y < 8 || x < 8 && y >= N - 8; }
+          for (var y = 0; y < N; y++) for (var x = 0; x < N; x++) if (!finder(x, y) && rnd() > 0.52) cells += "M" + x + " " + y + "h1v1h-1z";
+          var f = function (x, y) { return '<rect x="' + (x + .5) + '" y="' + (y + .5) + '" width="6" height="6" rx="1.4" fill="none" stroke="#14151a"/><rect x="' + (x + 2) + '" y="' + (y + 2) + '" width="3" height="3" rx=".6" fill="#14151a"/>'; };
+          return '<svg class="x-qr" viewBox="0 0 25 25" role="img" aria-label="Mã VietQR"><path d="' + cells + '" fill="#14151a"/>' + f(0, 0) + f(N - 7, 0) + f(0, N - 7) + '<rect x="10" y="10" width="5" height="5" rx="1.2" fill="#fff"/><rect x="10.8" y="10.8" width="3.4" height="3.4" rx="1" fill="#5e5ce6"/></svg>';
+        }
+        var modalEl = null, lastFocus = null;
+        ACTIONS.qr = function (t) {
+          var amt = t.getAttribute("data-amt") || "645.000đ", ref = t.getAttribute("data-ref") || "AIS-2610-0142";
+          lastFocus = t;
+          modalEl = document.createElement("div");
+          modalEl.className = "x-modal";
+          modalEl.innerHTML = '<div class="x-modal__card" role="dialog" aria-modal="true" aria-label="Thanh toán VietQR"><button type="button" class="x-modal__close" data-action="closeModal" aria-label="Đóng">' + ic("x") + '</button><p class="x-vietqr"><span>Viet</span>QR</p>' + qrSVG(ref) +
+            '<div><p class="x-label">Số tiền</p><p class="x-modal__amt">' + amt + '</p><p class="x-label">Nội dung chuyển khoản <span class="x-mono" style="color:#14151a">' + ref + '</span></p></div><p class="x-label">Quét bằng app ngân hàng bất kỳ. Đơn tự cập nhật khi tiền về.</p><button type="button" class="x-btn x-btn--primary" data-action="paid">' + ic("checkc", "x-ico--s") + "Tôi đã chuyển khoản</button></div>";
+          modalEl.addEventListener("click", function (e) { if (e.target === modalEl) ACTIONS.closeModal(); });
+          document.querySelector(".x-root").appendChild(modalEl);
+          modalEl.querySelector(".x-btn--primary").focus();
+        };
+        ACTIONS.closeModal = function () { if (modalEl) { modalEl.remove(); modalEl = null; if (lastFocus) lastFocus.focus(); } };
+        ACTIONS.paid = function () { ACTIONS.closeModal(); toast("Đã ghi nhận. Đang chờ ngân hàng xác nhận…"); };
+        ACTIONS.ask = function () { var i = document.getElementById("x-input"); if (i) { i.value = "Cho mình hỏi thêm về "; i.focus(); } };
+        ACTIONS.quick = function (t) { var i = document.getElementById("x-input"); if (i) { i.value = "Mình cần làm " + t.textContent.trim().toLowerCase(); i.focus(); } };
+        ACTIONS.opt = function (t) {
+          [].forEach.call(t.parentNode.querySelectorAll(".x-qchip"), function (b) {
+            var on = b === t; b.setAttribute("aria-pressed", String(on));
+            var svg = b.querySelector("svg"); if (svg) svg.remove();
+            if (on) b.insertAdjacentHTML("afterbegin", ic("check", "x-ico--s"));
+          });
+        };
+
+        render(location.hash.slice(1) || "c-02", true);
+      })();
+    </script>
+  </body>
+</html>
