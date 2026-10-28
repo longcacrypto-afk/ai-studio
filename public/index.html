@@ -845,7 +845,7 @@
         ACTIONS.quoteTab = function (t) { window.__quoteTab = t.getAttribute("data-tab"); render("c-04", true); };
 
         /* C-05 Chi tiết báo giá */
-        var QUOTE_STATUS = null;
+        var QUOTE_STATUS = null, ORDER_CODE_FOR_QUOTE = "chưa có đơn";
         function loadQuoteStatus() {
           if (QUOTE_STATUS !== null || window.__qsLoading) return;
           window.__qsLoading = true;
@@ -853,7 +853,11 @@
             var q = (b.quotes || []).filter(function (x) { return x.code === "Q-2610-031"; })[0];
             QUOTE_STATUS = q ? q.status : "missing";
             if (QUOTE_STATUS === "accepted") window.__quoteAccepted = true;
-            render("c-05", true);
+            return fetch("/api/orders").then(function (r) { return r.json(); }).then(function (o) {
+              var mine = (o.orders || []).filter(function (x) { return x.code.indexOf("AIS-2610-031") === 0; })[0];
+              if (mine) ORDER_CODE_FOR_QUOTE = mine.code;
+              render("c-05", true);
+            });
           }).catch(function () { QUOTE_STATUS = "error"; render("c-05", true); });
         }
         function renderC05() {
@@ -863,7 +867,7 @@
             line("Bộ nhận diện mini", "300.000đ") + '<li class="x-lines__sub">Danh thiếp, ly</li>' +
             line("Tạm tính", "1.290.000đ", "x-lines__total") + line("Cọc 50%", "645.000đ", "x-lines__dep") + "</ul>";
           var act = accepted
-            ? '<p class="x-label">Đã chấp nhận. Đơn AIS-2610-0142 đang chờ cọc.</p><button type="button" class="x-btn x-btn--primary" data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142">Thanh toán cọc 645.000đ</button>'
+            ? '<p class="x-label">Đã chấp nhận. Đơn ' + ORDER_CODE_FOR_QUOTE + ' đang chờ cọc.</p><button type="button" class="x-btn x-btn--primary" data-action="qr" data-amt="645.000đ" data-ref="' + ORDER_CODE_FOR_QUOTE + '">Thanh toán cọc 645.000đ</button>'
             : '<label class="x-check"><input type="checkbox" id="x-agree"> Tôi đồng ý điều khoản: bản quyền, nhãn AI, 3 lượt sửa</label>' +
               '<div class="x-quote__act"><button type="button" class="x-btn x-btn--primary" data-action="acceptQuote">Chấp nhận & thanh toán cọc</button><button type="button" class="x-btn x-btn--ghost" data-action="rejectQuote">Từ chối</button></div>';
           return pageHead("Báo giá Q-2610-031", "Logo tối giản + bộ nhận diện mini · " + stBadge(accepted ? "run" : "wait", accepted ? "Đã chấp nhận" : "Chờ chấp nhận"), backLink("c-04", "Báo giá")) +
