@@ -70,3 +70,21 @@ export interface OrderRow {
 export async function listOrders(): Promise<OrderRow[]> {
   return query<OrderRow>("select code, status, total, amount_paid from orders where customer_id = $1 order by created_at", [CLIENT_ID]);
 }
+
+// Tạo khoản thanh toán cọc cho đơn (một khoản pending, orderCode duy nhất cho payOS).
+export async function createDepositPayment(orderCode: string, amount: number, providerOrderCode: number, transferContent: string) {
+  return tx(async (q) => {
+    const [o] = await q<{ id: string; status: string }>("select id, status from orders where code = $1 and customer_id = $2", [orderCode, CLIENT_ID]);
+    if (!o) throw new Error("Không tìm thấy đơn");
+    if (o.status !== "awaiting_deposit") throw new Error("Đơn không ở trạng thái chờ cọc");
+    const code = "PAY-" + providerOrderCode;
+    const [p] = await q<{ code: string; provider_order_code: string }>(
+      `insert into payments (code, customer_id, order_id, kind, provider, provider_order_code, transfer_content, amount_expected, status)
+       values ($1, $2, $3, 'deposit', 'payos', $4, $5, $6, 'pending')
+       on conflict (provider_order_code) do update set provider_order_code = excluded.provider_order_code
+       returning code, provider_order_code`,
+      [code, CLIENT_ID, o.id, providerOrderCode, transferContent, amount],
+    );
+    return { code: p.code, providerOrderCode: Number(p.provider_order_code) };
+  });
+}

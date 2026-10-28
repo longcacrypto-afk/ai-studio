@@ -771,11 +771,21 @@
           lastFocus = t;
           modalEl = document.createElement("div");
           modalEl.className = "x-modal";
-          modalEl.innerHTML = '<div class="x-modal__card" role="dialog" aria-modal="true" aria-label="Thanh toán VietQR"><button type="button" class="x-modal__close" data-action="closeModal" aria-label="Đóng">' + ic("x") + '</button><p class="x-vietqr"><span>Viet</span>QR</p>' + qrSVG(ref) +
-            '<div><p class="x-label">Số tiền</p><p class="x-modal__amt">' + amt + '</p><p class="x-label">Nội dung chuyển khoản <span class="x-mono" style="color:#14151a">' + ref + '</span></p></div><p class="x-label">Quét bằng app ngân hàng bất kỳ. Đơn tự cập nhật khi tiền về.</p><button type="button" class="x-btn x-btn--primary" data-action="paid">' + ic("checkc", "x-ico--s") + "Tôi đã chuyển khoản</button></div>";
+          modalEl.innerHTML = '<div class="x-modal__card" role="dialog" aria-modal="true" aria-label="Thanh toán cọc"><button type="button" class="x-modal__close" data-action="closeModal" aria-label="Đóng">' + ic("x") + '</button><p class="x-label">Thanh toán cọc</p><p class="x-modal__amt">' + amt + '</p><p class="x-label">Đơn <span class="x-mono" style="color:#14151a">' + ref + '</span></p><div id="x-pay-body"><p class="x-label">Đang tạo mã thanh toán…</p></div></div>';
           modalEl.addEventListener("click", function (e) { if (e.target === modalEl) ACTIONS.closeModal(); });
           document.querySelector(".x-root").appendChild(modalEl);
-          modalEl.querySelector(".x-btn--primary").focus();
+          var body = modalEl.querySelector("#x-pay-body");
+          fetch("/api/payments/deposit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderCode: ref }) })
+            .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+            .then(function (res) {
+              if (!body.isConnected) return;
+              if (!res.ok) { body.innerHTML = '<p class="x-label">' + (res.body.error || "Chưa tạo được mã thanh toán") + "</p>"; return; }
+              body.innerHTML = (res.body.qrCode ? '<p class="x-label">Quét bằng app ngân hàng, hoặc mở link thanh toán:</p>' : "") +
+                '<p><a class="x-btn x-btn--primary" href="' + res.body.checkoutUrl + '" target="_blank" rel="noopener">Mở trang thanh toán</a></p>' +
+                '<p class="x-label">Đơn được xác nhận sau khi payOS báo đã nhận tiền, thường trong vài giây.</p>';
+            })
+            .catch(function () { if (body.isConnected) body.innerHTML = '<p class="x-label">Mất kết nối. Thử lại sau.</p>'; });
+          modalEl.querySelector(".x-modal__close").focus();
         };
         ACTIONS.closeModal = function () { if (modalEl) { modalEl.remove(); modalEl = null; if (lastFocus) lastFocus.focus(); } };
         ACTIONS.paid = function () { ACTIONS.closeModal(); toast("Đã ghi nhận. Đang chờ ngân hàng xác nhận…"); };
