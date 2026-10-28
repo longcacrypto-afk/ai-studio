@@ -95,6 +95,41 @@
       .x-st--queue { --c: var(--x-grey); }
 
       /* ---------- screen ---------- */
+
+      /* ---------- màn bổ sung (theo spec §8) ---------- */
+      .x-pad { padding: 20px; }
+      .x-grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .x-grow b { font-weight: 500; }
+      .x-grid2 { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+      @media (max-width: 860px) { .x-grid2 { grid-template-columns: 1fr; } }
+      .x-svc { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--x-ink-3); }
+      .x-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+      .x-tabs-row { display: flex; gap: 4px; border-bottom: 1px solid var(--x-line); margin: 4px 0 0; overflow-x: auto; }
+      .x-tab { padding: 8px 12px; font-size: 13px; color: var(--x-ink-3); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+      .x-tab:hover { color: var(--x-ink); }
+      .x-tab.is-on { color: var(--x-ink); border-bottom-color: var(--x-accent); font-weight: 500; }
+      .x-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+      .x-steps li { font-size: 12px; color: var(--x-ink-3); display: flex; flex-direction: column; gap: 6px; }
+      .x-steps li span { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--x-line); display: grid; place-items: center; font-size: 11px; font-variant-numeric: tabular-nums; }
+      .x-steps li.is-done span { background: var(--x-green); border-color: var(--x-green); color: #fff; }
+      .x-steps li.is-now { color: var(--x-ink); font-weight: 500; }
+      .x-steps li.is-now span { background: var(--x-accent); border-color: var(--x-accent); color: #fff; }
+      @media (max-width: 760px) { .x-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+      .x-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--x-line); border-radius: var(--x-r2); }
+      .x-kpis > div { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+      .x-kpis > div + div { border-left: 1px solid var(--x-line); }
+      .x-kpis span { font-size: 12px; color: var(--x-ink-3); }
+      .x-kpis b { font-weight: 500; font-size: 18px; }
+      .x-brief-dl { margin: 0; display: grid; gap: 10px; }
+      .x-brief-dl div { display: flex; justify-content: space-between; gap: 12px; }
+      .x-brief-dl dt { color: var(--x-ink-3); }
+      .x-brief-dl dd { margin: 0; text-align: right; }
+      .x-check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--x-ink-2); margin-bottom: 14px; }
+      .x-area { width: 100%; border: 1px solid var(--x-line); border-radius: var(--x-r); padding: 10px 12px; resize: vertical; margin: 6px 0 12px; }
+      .x-draft__view { aspect-ratio: 4 / 3; border-radius: var(--x-r); background: var(--x-soft); border: 1px dashed #d4d4d4; display: grid; place-items: center; margin-bottom: 12px; }
+      .x-draft .x-chips { display: flex; gap: 6px; }
+      .x-quote__act { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+      .x-steps { margin-bottom: 0; }
       .x-screen { padding: 28px 32px 56px; display: flex; flex-direction: column; gap: 28px; min-width: 0; }
       .x-screen--c-02 { max-width: 1080px; width: 100%; }
       .x-hello { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
@@ -521,12 +556,7 @@
         var SCREENS = [
           { id: "c-02", name: "Tổng quan khách hàng", group: "Khách hàng", render: renderC02, nav: "home" }
         ];
-        var PLANNED = [
-          { id: "C-04", name: "Chi tiết đơn & tiến độ", group: "Khách hàng" },
-          { id: "A-01", name: "Bàn duyệt của chủ studio", group: "Quản trị" },
-          { id: "A-03", name: "Báo giá & thanh toán", group: "Quản trị" },
-          { id: "V-01", name: "Hàng việc nhà cung cấp", group: "Nhà cung cấp" }
-        ];
+        var PLANNED = [];
         /* ---------- P-02 Chat với trợ lý AI ---------- */
         var aiAv = '<span class="x-av x-av--s x-av--ai" aria-hidden="true">' + ic("spark", "x-ico--s") + "</span>";
         var BRIEF = [
@@ -739,6 +769,194 @@
             if (on) b.insertAdjacentHTML("afterbegin", ic("check", "x-ico--s"));
           });
         };
+
+                /* ---------- Các màn còn lại theo spec §8 (cùng khuôn với C-02 / P-02) ---------- */
+        var SCREEN_STATUS = { run: "Đang làm", wait: "Chờ", done: "Hoàn tất", queue: "Xếp hàng", stop: "Tạm dừng" };
+        function stBadge(k, label) { return '<span class="x-st x-st--' + k + '">' + (label || SCREEN_STATUS[k]) + "</span>"; }
+        function svcTag(k) { var s = SVC[k] || { name: "", hex: "#737373" }; return '<span class="x-svc"><i class="x-dot" style="background:' + s.hex + '"></i>' + s.name + "</span>"; }
+        function pageHead(title, sub, actions) {
+          return '<div class="x-hello"><div><h1>' + title + "</h1>" + (sub ? '<p class="x-hello__sub">' + sub + "</p>" : "") + "</div>" +
+            (actions ? '<div class="x-hello__end">' + actions + "</div>" : "") + "</div>";
+        }
+        function backLink(to, text) { return '<button type="button" class="x-link" data-go="' + to + '">← ' + text + "</button>"; }
+        function kv(label, value) { return "<div><dt>" + label + "</dt><dd>" + value + "</dd></div>"; }
+        function listOrSkeleton(render, emptyText, emptyBtn, emptyGo) {
+          return pick(render, function () { return '<div class="x-box">' + skRows(4) + "</div>"; }, function () { return '<div class="x-box">' + empty(emptyText, emptyBtn, emptyGo) + "</div>"; });
+        }
+
+        /* C-04 Danh sách báo giá */
+        var QUOTES = [
+          { code: "Q-2610-031", svc: "design", name: "Logo tối giản + bộ nhận diện mini", total: "1.290.000đ", until: "23:59 30/10", st: ["wait", "Chờ bạn chấp nhận"], tab: "pending" },
+          { code: "Q-2610-024", svc: "camp", name: "Bộ 10 post Facebook", total: "1.850.000đ", until: "—", st: ["done", "Đã chấp nhận"], tab: "accepted" },
+          { code: "Q-2609-011", svc: "video", name: "Video khai trương 15s", total: "2.400.000đ", until: "hết hạn 02/10", st: ["queue", "Hết hạn"], tab: "expired" }
+        ];
+        function renderC04() {
+          var tab = (window.__quoteTab || "pending");
+          var tabs = [["pending", "Đang chờ"], ["accepted", "Đã chấp nhận"], ["expired", "Hết hạn"]].map(function (t) {
+            return '<button type="button" class="x-tab' + (t[0] === tab ? " is-on" : "") + '" data-action="quoteTab" data-tab="' + t[0] + '">' + t[1] + "</button>";
+          }).join("");
+          var rows = QUOTES.filter(function (q) { return q.tab === tab; });
+          var body = listOrSkeleton(function () {
+            if (!rows.length) return '<div class="x-box">' + empty("Không có báo giá nào ở mục này.") + "</div>";
+            return '<div class="x-box"><table class="x-table"><thead><tr><th>Mã</th><th>Dịch vụ</th><th>Hiệu lực</th><th>Trạng thái</th><th>Tổng</th></tr></thead><tbody>' +
+              rows.map(function (q) {
+                return '<tr><td><button type="button" class="x-link" data-go="c-05">' + q.code + "</button></td><td>" + svcTag(q.svc) + " " + q.name + "</td><td class=\"x-num\">" + q.until + "</td><td>" + stBadge(q.st[0], q.st[1]) + '</td><td class="x-num">' + q.total + "</td></tr>";
+              }).join("") + "</tbody></table></div>";
+          }, "Chưa có báo giá nào. Chat với trợ lý để nhận báo giá trong 3 phút.", "Chat với trợ lý", "p-02");
+          return pageHead("Báo giá", "Chị có " + QUOTES.filter(function (q) { return q.tab === "pending"; }).length + " báo giá đang chờ chấp nhận") +
+            '<div class="x-tabs-row">' + tabs + "</div>" + body;
+        }
+        ACTIONS.quoteTab = function (t) { window.__quoteTab = t.getAttribute("data-tab"); render("c-04", true); };
+
+        /* C-05 Chi tiết báo giá */
+        function renderC05() {
+          var accepted = window.__quoteAccepted === true;
+          var lines = '<ul class="x-lines">' + line("Logo tối giản", "990.000đ") + '<li class="x-lines__sub">1 phương án chính + 2 biến thể</li>' +
+            line("Bộ nhận diện mini", "300.000đ") + '<li class="x-lines__sub">Danh thiếp, ly</li>' +
+            line("Tạm tính", "1.290.000đ", "x-lines__total") + line("Cọc 50%", "645.000đ", "x-lines__dep") + "</ul>";
+          var act = accepted
+            ? '<p class="x-label">Đã chấp nhận. Đơn AIS-2610-0142 đang chờ cọc.</p><button type="button" class="x-btn x-btn--primary" data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142">Thanh toán cọc 645.000đ</button>'
+            : '<label class="x-check"><input type="checkbox" id="x-agree"> Tôi đồng ý điều khoản: bản quyền, nhãn AI, 3 lượt sửa</label>' +
+              '<div class="x-quote__act"><button type="button" class="x-btn x-btn--primary" data-action="acceptQuote">Chấp nhận & thanh toán cọc</button><button type="button" class="x-btn x-btn--ghost" data-action="rejectQuote">Từ chối</button></div>';
+          return pageHead("Báo giá Q-2610-031", "Logo tối giản + bộ nhận diện mini · " + stBadge(accepted ? "run" : "wait", accepted ? "Đã chấp nhận" : "Chờ chấp nhận"), backLink("c-04", "Báo giá")) +
+            '<div class="x-grid2"><section class="x-box x-pad">' + lines +
+            '<p class="x-terms">3 lượt sửa · Giao 48 giờ · Hạn <span class="x-num">23:59 30/10/2026</span> · Cọc 50%, phần còn lại trước khi mở file final</p></section>' +
+            '<aside class="x-box x-pad"><h2>Tóm tắt brief</h2><dl class="x-brief-dl">' + BRIEF.map(function (b) { return kv(b[0], b[1]); }).join("") + "</dl></aside></div>" +
+            '<section class="x-box x-pad">' + act + "</section>";
+        }
+        ACTIONS.acceptQuote = function () {
+          var box = document.getElementById("x-agree");
+          if (!box || !box.checked) { toast("Chị cần đồng ý điều khoản trước khi chấp nhận"); return; }
+          window.__quoteAccepted = true; render("c-05", true); toast("Đã chấp nhận báo giá. Mời chị thanh toán cọc");
+        };
+        ACTIONS.rejectQuote = function () { toast("Đã ghi lý do từ chối. Chuyên viên sẽ liên hệ"); };
+
+        /* C-08 Chi tiết đơn */
+        function renderC08() {
+          var o = ORDERS[0];
+          var jobs = '<ul class="x-rows">' + [
+            { n: "Logo Mộc An", svc: "design", pct: 62, st: ["run", "Đang làm"], eta: "16:30 28/10" },
+            { n: "Bộ nhận diện mini", svc: "design", pct: 0, st: ["queue", "Chờ logo"], eta: "30/10" }
+          ].map(function (j) {
+            return '<li><div class="x-grow"><b>' + j.n + "</b><span class=\"x-label\">" + svcTag(j.svc) + "</span></div>" + bar(j.pct) + stBadge(j.st[0], j.st[1]) + '<span class="x-num x-label">' + j.eta + '</span><button type="button" class="x-link" data-go="c-09">Xem tiến độ</button></li>';
+          }).join("") + "</ul>";
+          return pageHead("Đơn AIS-2610-0142", "Logo Mộc An · " + stBadge("wait", "Cần thanh toán phần còn lại"), backLink("c-02", "Tổng quan")) +
+            '<div class="x-kpis"><div><span>Tổng</span><b class="x-num">1.290.000đ</b></div><div><span>Đã trả</span><b class="x-num">645.000đ</b></div><div><span>Còn lại</span><b class="x-num">645.000đ</b></div></div>' +
+            '<div class="x-tabs-row"><button type="button" class="x-tab is-on">Tổng quan</button><button type="button" class="x-tab" data-go="c-09">Timeline</button><button type="button" class="x-tab" data-go="p-02">Tin nhắn</button><button type="button" class="x-tab" data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142">Thanh toán</button><button type="button" class="x-tab" data-toast="Tệp có ở vòng sau">Tệp</button></div>' +
+            '<section class="x-box"><div class="x-box__head"><h2>Hạng mục</h2></div>' + jobs + "</section>" +
+            '<section class="x-box x-pad"><h2>Thanh toán còn lại</h2><p class="x-label">Thu trước khi mở file final. Nhắc lại sau khi bản nháp được duyệt.</p><button type="button" class="x-btn x-btn--primary" data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142">Quét QR thanh toán</button></section>';
+        }
+
+        /* C-09 Live timeline job */
+        var JOB_STEPS = ["Xếp hàng", "Lên ý tưởng", "Sản xuất", "Kiểm tra chất lượng", "Chuyên viên duyệt", "Chị duyệt", "Hoàn tất"];
+        function renderC09() {
+          var cur = 2;
+          var steps = '<ol class="x-steps">' + JOB_STEPS.map(function (s, i) {
+            return '<li class="' + (i < cur ? "is-done" : i === cur ? "is-now" : "") + '"><span>' + (i + 1) + "</span>" + s + "</li>";
+          }).join("") + "</ol>";
+          var feed = '<ol class="x-tl">' + [
+            ["16:02", "Mai đã tạo 6 hướng ý tưởng", "Sản xuất"],
+            ["15:20", "Mai đang dựng phương án 2 logo", "Sản xuất"],
+            ["14:28", "Lan đã chấm 92/100 cho logo v2", "Kiểm tra"],
+            ["13:55", "Chị đã thanh toán cọc 645.000đ", "Xác nhận"]
+          ].map(function (f) { return "<li><time>" + f[0] + '</time><span class="x-tl__dot" aria-hidden="true"></span><div><p>' + f[1] + '</p><span class="x-label">' + f[2] + "</span></div></li>"; }).join("") + "</ol>";
+          return pageHead("Logo Mộc An", "Đang làm · " + bar(62).replace('class="x-bar"', 'class="x-bar" style="min-width:160px"') + " · dự kiến 16:30 28/10", backLink("c-08", "Đơn hàng")) +
+            '<section class="x-box x-pad">' + steps + "</section>" +
+            '<div class="x-grid2"><section aria-label="Diễn biến">' + feed + '</section><aside class="x-box x-pad"><h2>Đội đang làm</h2>' +
+            '<ul class="x-rows">' + AGENTS.slice(0, 2).map(function (a) { return '<li>' + av(a.key, "x-av--s") + '<div class="x-grow"><b>' + a.name + '</b><span class="x-label">' + a.task + "</span></div></li>"; }).join("") + "</ul></aside></div>";
+        }
+
+        /* C-10 Xem & duyệt bản nháp */
+        function renderC10() {
+          var approved = window.__draftApproved === true;
+          return pageHead("Duyệt bản nháp logo Mộc An", "Bản v2 · " + (approved ? stBadge("done", "Đã duyệt") : stBadge("wait", "Chờ chị duyệt")), backLink("c-08", "Đơn hàng")) +
+            '<div class="x-grid2"><section class="x-box x-pad x-draft"><div class="x-draft__view" role="img" aria-label="Bản nháp logo v2"><span class="x-mono">Logo v2 · xem trước có watermark</span></div>' +
+            '<div class="x-chips" role="group" aria-label="Phiên bản">' + ["v1", "v2"].map(function (v, i) { return '<button type="button" class="x-qchip" aria-pressed="' + (i === 1) + '">' + v + "</button>"; }).join("") + "</div></section>" +
+            '<aside class="x-box x-pad"><h2>Lượt sửa</h2><p class="x-num">Còn 2/3 lượt</p><p class="x-label">Mỗi lần gửi yêu cầu sửa dùng 1 lượt. Hết lượt, thêm lượt bằng báo giá phụ.</p>' +
+            (approved
+              ? '<p class="x-label">Đã duyệt. Chuyên viên sẽ chuẩn bị file final sau khi chị thanh toán phần còn lại.</p>'
+              : '<div class="x-quote__act"><button type="button" class="x-btn x-btn--primary" data-action="approveDraft">Duyệt bản này</button><button type="button" class="x-btn x-btn--ghost" data-go="c-11">Yêu cầu sửa</button></div>') +
+            '<p class="x-label" style="margin-top:12px">Nội dung do AI tạo. Chuyên viên đã kiểm tra trước khi gửi.</p></aside></div>';
+        }
+        ACTIONS.approveDraft = function () { window.__draftApproved = true; render("c-10", true); toast("Đã duyệt. Thanh toán phần còn lại để nhận file final"); };
+
+        /* C-11 Annotate & gửi sửa */
+        function renderC11() {
+          return pageHead("Yêu cầu sửa · Logo v2", "Ghim vị trí cần sửa trên bản nháp, rồi gửi. Dùng 1 lượt.", backLink("c-10", "Bản nháp")) +
+            '<div class="x-grid2"><section class="x-box x-pad x-draft"><div class="x-draft__view" role="img" aria-label="Bản nháp để ghim"><span class="x-mono">Chạm để ghim vị trí</span></div></section>' +
+            '<aside class="x-box x-pad"><h2>Ghi chú</h2><ol class="x-rows" id="x-notes"><li class="x-label">Chưa có ghi chú nào.</li></ol>' +
+            '<label class="x-label" for="x-general">Ghi chú chung</label><textarea id="x-general" class="x-area" rows="3" placeholder="Ví dụ: đổi màu chữ sang nâu đậm"></textarea>' +
+            '<div class="x-quote__act"><button type="button" class="x-btn x-btn--primary" data-action="sendRevision">Gửi yêu cầu sửa · dùng 1 lượt</button></div></aside></div>';
+        }
+        ACTIONS.sendRevision = function () {
+          var n = document.getElementById("x-general"); if (!n || !n.value.trim()) { toast("Chị cần ghi ít nhất một ghi chú"); return; }
+          toast("Đã gửi yêu cầu sửa. Còn 1/3 lượt");
+        };
+
+        /* C-12 Tải file final */
+        function renderC12() {
+          var files = [["logo-mo-can-v2.svg", "SVG", "140 KB"], ["logo-mo-can-v2.png", "PNG", "1,2 MB"], ["bo-nhan-dien-mini.pdf", "PDF", "3,4 MB"]];
+          return pageHead("File bàn giao · Logo Mộc An", "Đơn AIS-2610-0142 · " + stBadge("done", "Hoàn tất"), backLink("c-08", "Đơn hàng")) +
+            '<section class="x-box"><ul class="x-rows">' + files.map(function (f) {
+              return '<li><div class="x-grow"><b>' + f[0] + '</b><span class="x-label">' + f[1] + " · " + f[2] + '</span></div><button type="button" class="x-link" data-toast="Đang tải ' + f[0] + '">Tải về</button></li>';
+            }).join("") + "</ul></section>" +
+            '<section class="x-box x-pad"><h2>Hộp nhãn AI</h2><p class="x-label">Khi đăng logo hoặc tài liệu này, hãy ghi chú là có sử dụng AI trong quá trình tạo.</p></section>' +
+            '<section class="x-box x-pad"><h2>Đánh giá</h2><p class="x-label">Chị thấy kết quả thế nào?</p><div class="x-chips">' + ["1", "2", "3", "4", "5"].map(function (n) { return '<button type="button" class="x-qchip" data-toast="Cảm ơn chị đã đánh giá ' + n + ' sao">' + n + " sao</button>"; }).join("") + "</div></section>";
+        }
+
+        /* A-01 Bàn duyệt (chủ studio) */
+        var APPROVALS = [
+          { k: "draft", t: "Bản nháp logo Mộc An v2", c: "Mộc An", age: "18 phút", qc: 92, svc: "design" },
+          { k: "quote", t: "Báo giá Q-2610-031", c: "Mộc An", age: "1 giờ", qc: null, svc: "design" },
+          { k: "pay", t: "Thanh toán chưa khớp số tiền", c: "Tiệm Bánh Nhỏ", age: "3 giờ", qc: null, svc: "camp" }
+        ];
+        function renderA01() {
+          var rows = APPROVALS.map(function (a) {
+            return '<li>' + svcTag(a.svc) + '<div class="x-grow"><b>' + a.t + '</b><span class="x-label">' + a.c + " · chờ " + a.age + "</span></div>" +
+              (a.qc != null ? '<span class="x-num x-label">QC ' + a.qc + "/100</span>" : "") +
+              '<button type="button" class="x-link" data-toast="Mở ' + a.t + '">Xem</button></li>';
+          }).join("");
+          return pageHead("Bàn duyệt", APPROVALS.length + " việc cần chủ studio duyệt") +
+            '<section class="x-box"><ul class="x-rows">' + rows + "</ul></section>";
+        }
+
+        /* A-03 Báo giá & thanh toán (admin) */
+        function renderA03() {
+          return pageHead("Báo giá & thanh toán", "Đối soát và báo giá đang mở") +
+            '<section class="x-box"><table class="x-table"><thead><tr><th>Mã</th><th>Khách</th><th>Dịch vụ</th><th>Tổng</th><th>Cọc</th><th>Trạng thái</th></tr></thead><tbody>' +
+            '<tr><td class="x-mono">Q-2610-031</td><td>Quán Mộc An</td><td>Logo + mini</td><td class="x-num">1.290.000đ</td><td class="x-num">645.000đ</td><td>' + stBadge("wait", "Chờ chấp nhận") + "</td></tr>" +
+            '<tr><td class="x-mono">AIS-2610-0142</td><td>Quán Mộc An</td><td>Logo + mini</td><td class="x-num">1.290.000đ</td><td class="x-num">645.000đ</td><td>' + stBadge("run", "Đã cọc") + "</td></tr>" +
+            '<tr><td class="x-mono">Q-2610-024</td><td>Tiệm Bánh Nhỏ</td><td>Bộ 10 post</td><td class="x-num">1.850.000đ</td><td class="x-num">925.000đ</td><td>' + stBadge("done", "Đã thanh toán") + "</td></tr>" +
+            "</tbody></table></section>";
+        }
+
+        /* A-08 Chi tiết job (admin) */
+        function renderA08() {
+          return pageHead("Job · Logo Mộc An", "Đang làm · " + svcTag("design") + " · Mai", backLink("a-01", "Bàn duyệt")) +
+            '<div class="x-tabs-row"><button type="button" class="x-tab is-on">Tổng quan</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Sự kiện nội bộ</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Lượt chạy agent</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Chi phí</button></div>' +
+            '<div class="x-grid2"><section class="x-box x-pad"><dl class="x-brief-dl">' + kv("Trạng thái", "Đang làm") + kv("Tiến độ", "62%") + kv("QC", "92/100 · vòng 1") + kv("Ngân sách model", "12% · đã dùng 38%") + "</dl></section>" +
+            '<aside class="x-box x-pad"><h2>Thao tác</h2><div class="x-quote__act"><button type="button" class="x-btn x-btn--ghost" data-toast="Đã tạm dừng job">Tạm dừng</button><button type="button" class="x-btn x-btn--ghost" data-toast="Đã chạy lại job">Chạy lại</button></div></aside></div>';
+        }
+
+        /* V-01 Hàng việc nhà cung cấp (Phase 3) */
+        function renderV01() {
+          return pageHead("Hàng việc", "Việc được giao cho nhà cung cấp · Phase 3, giao diện mẫu") +
+            '<section class="x-box"><ul class="x-rows">' + [
+              ["Logo cà phê · tối giản", "design", "Chờ nhận", "Nhận việc"], ["Video TikTok 15s", "video", "Đang làm", "Mở việc"]
+            ].map(function (r) { return "<li>" + svcTag(r[1]) + '<div class="x-grow"><b>' + r[0] + '</b><span class="x-label">' + r[2] + "</span></div>" + '<button type="button" class="x-btn x-btn--ghost" data-toast="Có ở vòng sau">' + r[3] + "</button></li>"; }).join("") + "</ul></section>";
+        }
+
+        SCREENS.push({ id: "c-04", name: "Báo giá", group: "Khách hàng", render: renderC04, nav: "home" });
+        SCREENS.push({ id: "c-05", name: "Chi tiết báo giá", group: "Khách hàng", render: renderC05, nav: "home" });
+        SCREENS.push({ id: "c-08", name: "Chi tiết đơn", group: "Khách hàng", render: renderC08, nav: "orders" });
+        SCREENS.push({ id: "c-09", name: "Tiến độ job", group: "Khách hàng", render: renderC09, nav: "orders" });
+        SCREENS.push({ id: "c-10", name: "Duyệt bản nháp", group: "Khách hàng", render: renderC10, nav: "orders" });
+        SCREENS.push({ id: "c-11", name: "Yêu cầu sửa", group: "Khách hàng", render: renderC11, nav: "orders" });
+        SCREENS.push({ id: "c-12", name: "File bàn giao", group: "Khách hàng", render: renderC12, nav: "files" });
+        SCREENS.push({ id: "a-01", name: "Bàn duyệt", group: "Quản trị", render: renderA01, nav: "home" });
+        SCREENS.push({ id: "a-03", name: "Báo giá & thanh toán", group: "Quản trị", render: renderA03, nav: "pay" });
+        SCREENS.push({ id: "a-08", name: "Chi tiết job", group: "Quản trị", render: renderA08, nav: "orders" });
+        SCREENS.push({ id: "v-01", name: "Hàng việc nhà cung cấp", group: "Nhà cung cấp", render: renderV01, nav: "orders" });
 
         render(location.hash.slice(1) || "c-02", true);
       })();
