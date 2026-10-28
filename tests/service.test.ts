@@ -1,4 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+process.env.PGLITE_DIR = mkdtempSync(join(tmpdir(), "pglite-"));
 import { acceptQuote, listQuotes, listOrders } from "../src/lib/service";
 import { QuoteNotAcceptable } from "../src/lib/order-flow";
 

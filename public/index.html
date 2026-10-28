@@ -845,6 +845,24 @@
         ACTIONS.quoteTab = function (t) { window.__quoteTab = t.getAttribute("data-tab"); render("c-04", true); };
 
         /* C-05 Chi tiết báo giá */
+        function loadEvents(code, box) {
+          box.innerHTML = '<p class="x-label">Đang tải sự kiện…</p>';
+          fetch("/api/orders/" + encodeURIComponent(code) + "/events").then(function (r) { return r.json(); }).then(function (b) {
+            var ev = b.events || [];
+            box.innerHTML = ev.length
+              ? '<ol class="x-timeline">' + ev.map(function (e) {
+                  return '<li><span class="x-mono">' + new Date(e.created_at).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }) + "</span> " +
+                    (e.from_status ? e.from_status + " → " : "") + "<b>" + e.to_status + "</b> · " + e.actor_type + (e.reason ? " — " + e.reason : "") + "</li>";
+                }).join("") + "</ol>"
+              : '<p class="x-label">Chưa có sự kiện nào.</p>';
+          }).catch(function () { box.innerHTML = '<p class="x-label">Không tải được sự kiện.</p>'; });
+        }
+        document.addEventListener("click", function (e) {
+          var t = e.target.closest && e.target.closest("[data-tab-events]");
+          if (!t) return;
+          var box = document.getElementById("x-events");
+          if (box) loadEvents(t.getAttribute("data-tab-events"), box);
+        });
         var QUOTE_STATUS = null, ORDER_CODE_FOR_QUOTE = "chưa có đơn";
         function loadQuoteStatus() {
           if (QUOTE_STATUS !== null || window.__qsLoading) return;
@@ -902,7 +920,7 @@
           }).join("") + "</ul>";
           return pageHead("Đơn AIS-2610-0142", "Logo Mộc An · " + stBadge("wait", "Cần thanh toán phần còn lại"), backLink("c-02", "Tổng quan")) +
             '<div class="x-kpis"><div><span>Tổng</span><b class="x-num">1.290.000đ</b></div><div><span>Đã trả</span><b class="x-num">645.000đ</b></div><div><span>Còn lại</span><b class="x-num">645.000đ</b></div></div>' +
-            '<div class="x-tabs-row"><button type="button" class="x-tab is-on">Tổng quan</button><button type="button" class="x-tab" data-go="c-09">Timeline</button><button type="button" class="x-tab" data-go="p-02">Tin nhắn</button><button type="button" class="x-tab" data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142">Thanh toán</button><button type="button" class="x-tab" data-toast="Tệp có ở vòng sau">Tệp</button></div>' +
+            '<div class="x-tabs-row"><button type="button" class="x-tab is-on">Tổng quan</button><button type="button" class="x-tab" data-go="c-09">Timeline</button><button type="button" class="x-tab" data-go="p-02">Tin nhắn</button><button type="button" class="x-tab" data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142">Thanh toán</button><button type="button" class="x-tab" data-go="c-12">Tệp</button></div>' +
             '<section class="x-box"><div class="x-box__head"><h2>Hạng mục</h2></div>' + jobs + "</section>" +
             '<section class="x-box x-pad"><h2>Thanh toán còn lại</h2><p class="x-label">Thu trước khi mở file final. Nhắc lại sau khi bản nháp được duyệt.</p><button type="button" class="x-btn x-btn--primary" data-action="qr" data-amt="645.000đ" data-ref="AIS-2610-0142">Quét QR thanh toán</button></section>';
         }
@@ -993,9 +1011,10 @@
         /* A-08 Chi tiết job (admin) */
         function renderA08() {
           return pageHead("Job · Logo Mộc An", "Đang làm · " + svcTag("design") + " · Mai", backLink("a-01", "Bàn duyệt")) +
-            '<div class="x-tabs-row"><button type="button" class="x-tab is-on">Tổng quan</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Sự kiện nội bộ</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Lượt chạy agent</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Chi phí</button></div>' +
+            '<div class="x-tabs-row"><button type="button" class="x-tab is-on">Tổng quan</button><button type="button" class="x-tab" data-tab-events="AIS-2610-031">Sự kiện nội bộ</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Lượt chạy agent</button><button type="button" class="x-tab" data-toast="Có ở vòng sau">Chi phí</button></div>' +
             '<div class="x-grid2"><section class="x-box x-pad"><dl class="x-brief-dl">' + kv("Trạng thái", "Đang làm") + kv("Tiến độ", "62%") + kv("QC", "92/100 · vòng 1") + kv("Ngân sách model", "12% · đã dùng 38%") + "</dl></section>" +
-            '<aside class="x-box x-pad"><h2>Thao tác</h2><div class="x-quote__act"><button type="button" class="x-btn x-btn--ghost" data-toast="Đã tạm dừng job">Tạm dừng</button><button type="button" class="x-btn x-btn--ghost" data-toast="Đã chạy lại job">Chạy lại</button></div></aside></div>';
+            '<aside class="x-box x-pad"><h2>Thao tác</h2><div class="x-quote__act"><button type="button" class="x-btn x-btn--ghost" data-toast="Đã tạm dừng job">Tạm dừng</button><button type="button" class="x-btn x-btn--ghost" data-toast="Đã chạy lại job">Chạy lại</button></div></aside></div>' +
+            '<section class="x-box x-pad" id="x-events" style="margin-top:16px"><p class="x-label">Chọn tab Sự kiện nội bộ để xem nhật ký đơn.</p></section>';
         }
 
         /* V-01 Hàng việc nhà cung cấp (Phase 3) */

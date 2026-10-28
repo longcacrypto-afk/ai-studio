@@ -1,7 +1,8 @@
 // Database cho bản chạy thử: PGlite (Postgres thật, chạy trong Node). Khi có Supabase, đổi driver ở đây.
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { mkdirSync } from "node:fs";
 
 type Db = PGlite;
 let instance: Promise<Db> | null = null;
@@ -9,10 +10,16 @@ let instance: Promise<Db> | null = null;
 export function getDb(): Promise<Db> {
   if (!instance) {
     instance = (async () => {
-      const db = new PGlite();
+      // Lưu ra đĩa để dữ liệu còn sau khi khởi động lại. PGLITE_DIR đặt ở đâu tùy môi trường.
+      const dir = process.env.PGLITE_DIR || join(process.cwd(), ".data/pglite");
+      mkdirSync(dirname(dir), { recursive: true });
+      const db = new PGlite(dir);
       const sql = readFileSync(join(process.cwd(), "supabase/migrations/0001_core.sql"), "utf8");
-      await db.exec(sql);
-      await seed(db);
+      const [{ n }] = (await db.query<{ n: number }>("select count(*)::int as n from information_schema.tables where table_schema = 'public'")).rows;
+      if (n === 0) {
+        await db.exec(sql);
+        await seed(db);
+      }
       return db;
     })();
   }
