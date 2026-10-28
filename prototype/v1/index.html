@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Studio UI Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" />
+<style>
+  :root{
+    --canvas:#f6f5f1; --card:#fff; --line:rgba(28,27,23,.10); --line-2:rgba(28,27,23,.18);
+    --ink:#1c1b17; --muted:#66635b; --accent:#2f45ff; --paid:#0b7a48; --tint:#efede7;
+    --r:10px; --pill:999px; --sans:"Be Vietnam Pro",system-ui,sans-serif; --mono:"Geist Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--canvas);color:var(--ink);font:400 14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .mono{font-family:var(--mono);font-size:12px;letter-spacing:.01em}
+  .muted{color:var(--muted)}
+
+  /* shell */
+  .app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+  .rail{border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;background:var(--canvas)}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;padding:0 8px}
+  .brand i{width:22px;height:22px;border-radius:6px;background:var(--ink);display:inline-block;position:relative}
+  .brand i::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--canvas)}
+  .rail h6{margin:0 8px 6px;font:500 12px/1 var(--sans);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .rail nav{display:flex;flex-direction:column;gap:2px}
+  .rail nav button{display:flex;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:9px 8px;border-radius:8px;min-height:40px}
+  .rail nav button:hover{background:var(--tint)}
+  .rail nav button[aria-current="true"]{background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+  .rail nav .mono{color:var(--muted);width:34px}
+  .rail-note{margin-top:auto;padding:0 8px;font-size:12px;color:var(--muted)}
+
+  .stage{display:flex;flex-direction:column;min-width:0}
+  .bar{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--line)}
+  .bar .title{font-weight:600}
+  .bar select{display:none;flex:1;min-height:40px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--card);padding:0 10px}
+  .seg{margin-left:auto;display:inline-flex;border:1px solid var(--line-2);border-radius:var(--pill);padding:3px;background:var(--card)}
+  .seg button{border:0;background:none;padding:6px 14px;border-radius:var(--pill);min-height:32px;font-size:13px}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .view{flex:1;display:flex;justify-content:center;padding:28px 24px 48px}
+
+  /* frames */
+  .phone{width:390px;height:800px;max-height:calc(100vh - 120px);min-height:600px;background:var(--canvas);border:1px solid var(--line-2);border-radius:36px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .phone .status{display:flex;justify-content:space-between;padding:12px 26px 6px;font:500 12px var(--sans)}
+  .phone .scroll{flex:1;overflow:auto;padding:8px 16px 20px}
+  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--card);padding:6px 4px 14px}
+  .tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--muted);min-height:44px;padding-top:4px}
+  .tabbar button svg{width:20px;height:20px}
+  .tabbar button[aria-current="true"]{color:var(--ink);font-weight:600}
+  .desk{width:100%;max-width:1040px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+  .desk .topnav{display:flex;align-items:center;gap:22px;padding:14px 22px;border-bottom:1px solid var(--line)}
+  .desk .topnav button{border:0;background:none;color:var(--muted);padding:6px 0;min-height:36px}
+  .desk .topnav button[aria-current="true"]{color:var(--ink);font-weight:600}
+  .desk .scroll{padding:28px;background:var(--canvas)}
+
+  /* atoms */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line-2);background:var(--card);border-radius:var(--pill);padding:0 18px;min-height:44px;font-weight:500;white-space:nowrap}
+  .btn:hover{background:var(--tint)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+  .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.block{width:100%}
+  .tag{display:inline-flex;align-items:center;border-radius:var(--pill);padding:2px 9px;font-size:12px;font-weight:500;border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+  .tag.ai{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tag.ai::before{content:"";width:6px;height:6px;border-radius:50%;background:#7cf0b4;margin-right:6px}
+  .paid{color:var(--paid);font-weight:600}
+  .sec-h{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 10px}
+  .sec-h h3{margin:0;font-size:15px;font-weight:600}
+  .sec-h span{font-size:12px;color:var(--muted)}
+  .rows>div{display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid var(--line)}
+  .rows>div:first-child{border-top:0}
+  .rows .grow{flex:1;min-width:0}
+  .rows .price{font-weight:600;white-space:nowrap}
+  .ico{width:36px;height:36px;border-radius:9px;background:var(--tint);display:grid;place-items:center;flex:none}
+  .ico svg{width:18px;height:18px}
+
+  /* P-01 */
+  .hero h1{font-size:28px;line-height:1.2;font-weight:700;letter-spacing:-.02em;margin:14px 0 10px}
+  .hero p{color:var(--muted);margin:0 0 18px;font-size:15px}
+  .desk .hero h1{font-size:40px;max-width:620px}
+  .flow{display:flex;flex-direction:column;gap:0;counter-reset:s}
+  .flow li{list-style:none;display:flex;gap:12px;align-items:center;padding:10px 0;position:relative}
+  .flow li::before{counter-increment:s;content:counter(s);width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font:500 12px var(--mono);background:var(--card);flex:none;z-index:1}
+  .flow li:not(:last-child)::after{content:"";position:absolute;left:13px;top:36px;bottom:-10px;border-left:1px solid var(--line-2)}
+  .flow{padding:0;margin:0}
+  .desk .flow{flex-direction:row;justify-content:space-between}
+  .desk .flow li{flex-direction:column;flex:1;text-align:center;gap:8px}
+  .desk .flow li:not(:last-child)::after{left:calc(50% + 13px);right:calc(-50% + 13px);top:23px;bottom:auto;border-left:0;border-top:1px solid var(--line-2)}
+  .desk .p01{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start}
+
+  /* P-02 chat */
+  .chat{display:flex;flex-direction:column;height:100%}
+  .chat-head{display:flex;align-items:center;gap:10px;padding:6px 0 12px;border-bottom:1px solid var(--line)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:600 12px var(--sans);flex:none}
+  .msgs{flex:1;display:flex;flex-direction:column;gap:12px;padding:16px 0;overflow:auto}
+  .msg{max-width:86%;padding:10px 14px;border-radius:16px;font-size:14px}
+  .msg.ai{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px;align-self:flex-start}
+  .msg.me{background:var(--ink);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+  .quote{align-self:flex-start;width:min(100%,340px);overflow:hidden}
+  .quote header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .quote .spec{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px 4px}
+  .quote dl{margin:0;padding:6px 14px 12px}
+  .quote dl div{display:flex;justify-content:space-between;padding:5px 0}
+  .quote dt{color:var(--muted)} .quote dd{margin:0;font-weight:600}
+  .quote footer{padding:0 14px 14px}
+  .chips{display:flex;gap:6px;overflow:auto;padding:4px 0 8px}
+  .chips button{border:1px solid var(--line-2);background:var(--card);border-radius:var(--pill);padding:6px 12px;font-size:13px;white-space:nowrap;min-height:36px}
+  .composer{display:flex;gap:8px;align-items:center;border:1px solid var(--line-2);background:var(--card);border-radius:var(--pill);padding:4px 4px 4px 16px}
+  .composer input{flex:1;border:0;outline:0;background:none;min-height:40px;min-width:0}
+  .composer .btn{min-height:40px;padding:0 14px}
+  .phone .chat{flex:1;min-height:0;height:auto}
+  .desk .chat{height:620px;max-width:720px;margin:0 auto}
+  .typing{display:inline-flex;gap:4px}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:b 1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+  @keyframes b{0%,100%{opacity:.3}50%{opacity:1}}
+
+  /* C-02 */
+  .todo>div{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-top:1px solid var(--line)}
+  .todo>div:first-child{border-top:0}
+  .todo input{width:18px;height:18px;margin-top:2px;accent-color:var(--ink);flex:none}
+  .todo .done .t{text-decoration:line-through;color:var(--muted)}
+  .prog{height:6px;border-radius:var(--pill);background:var(--tint);overflow:hidden;margin:10px 0 8px}
+  .prog i{display:block;height:100%;background:var(--ink);border-radius:inherit}
+  .credit{display:flex;gap:4px;margin-top:10px}
+  .credit i{flex:1;height:6px;border-radius:var(--pill);background:var(--ink)}
+  .credit i.off{background:var(--tint)}
+  .desk .c02{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:start}
+  .greet h2{margin:6px 0 2px;font-size:22px;font-weight:700;letter-spacing:-.01em}
+
+  /* C-06 / C-09 / C-10 */
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .desk .c06{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;max-width:820px}
+  .phone .c06>*+*{margin-top:14px}
+  .qr{padding:18px;text-align:center}
+  .qr svg{width:100%;max-width:220px;display:block;margin:12px auto}
+  .bank{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600}
+  .bank b{background:#1b3fa0;color:#fff;border-radius:6px;padding:2px 6px;font:600 12px var(--mono)}
+  .cd{font:500 22px var(--mono)}
+  .val{font:500 15px var(--mono)}
+  .copy{border:1px solid var(--line-2);background:var(--card);border-radius:var(--pill);min-height:36px;padding:0 12px;font-size:13px;flex:none}
+  .copy:hover{background:var(--tint)}
+  .warn{display:flex;gap:8px;align-items:center;margin:10px 0 0;background:#fdf1dc;color:#8a4f00;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:500}
+  .note{font-size:12px;color:var(--muted);margin:10px 2px 0}
+  .ok{text-align:center;padding:32px 20px;max-width:440px;margin:0 auto}
+  .ok .tick{width:56px;height:56px;border-radius:50%;background:var(--paid);color:#fff;display:grid;place-items:center;margin:0 auto 14px}
+  .ok h2{margin:0 0 4px;font-size:20px}
+  .ok p{margin:0 0 18px;color:var(--muted)}
+  .flow li.done::before{content:"✓";background:var(--ink);border-color:var(--ink);color:#fff}
+  .flow li.now{font-weight:600}
+  .flow li.now::before{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px rgba(47,69,255,.15)}
+  .flow li:not(.done):not(.now){color:var(--muted)}
+  .desk .flow li{font-size:13px}
+  .feed>div{display:flex;gap:12px;padding:12px 16px;border-top:1px solid var(--line);animation:in .35s}
+  .feed>div:first-child{border-top:0}
+  .feed .mono{color:var(--muted);padding-top:2px;flex:none}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}}
+  .art{position:relative;cursor:crosshair;overflow:hidden;padding:0}
+  .art svg{display:block;width:100%;height:auto}
+  .pin{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font:600 12px var(--mono);box-shadow:0 0 0 3px #fff;pointer-events:none}
+  .pnum{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font:600 12px var(--mono);flex:none}
+  .pins input{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:8px;min-height:40px;padding:0 10px;background:var(--card)}
+  .aino{display:flex;gap:8px;align-items:center;background:var(--tint);border-radius:8px;padding:9px 12px;font-size:13px;margin:14px 0 0}
+  .desk .c10{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;align-items:start}
+  dialog{border:1px solid var(--line);border-radius:var(--r);padding:20px;width:min(360px,calc(100% - 32px));color:var(--ink);background:var(--card)}
+  dialog::backdrop{background:rgba(28,27,23,.35)}
+  dialog p{margin:0 0 18px;font-size:15px}
+  dialog .acts{display:flex;gap:8px;justify-content:flex-end}
+
+  /* Quản trị */
+  .admx{width:100%;max-width:1040px;overflow-x:auto}
+  .adm{min-width:960px}
+  .adm .atop{height:60px;flex:none;display:flex;align-items:center;gap:12px;padding:0 22px;border-bottom:1px solid var(--line);font-weight:600}
+  .adm .atop .mono{margin-left:auto;font-weight:400}
+  .admm{width:390px;max-width:100%;height:800px;max-height:calc(100vh - 120px);min-height:600px;overflow:auto;border:1px solid var(--line-2);border-radius:36px;background:var(--canvas)}
+  .admm .adm{zoom:.5;width:1040px;max-width:none;border:0;border-radius:0}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .kpi{padding:14px 16px}
+  .kpi b{display:block;font-size:20px;font-weight:700;letter-spacing:-.01em;margin:4px 0 2px;white-space:nowrap}
+  .kpi span,.kpi small{font-size:12px;color:var(--muted)}
+  .up{color:var(--paid);font-weight:600}
+  .a2{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start}
+  .csvg{display:block;width:100%;height:auto;font:400 13px var(--sans);fill:var(--muted)}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .sev{width:8px;height:8px;border-radius:50%;flex:none;background:#c98a00}
+  .sev.hi{background:#c62828}
+  .atabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:14px 0 16px}
+  .atabs button{border:0;background:none;padding:10px 12px;min-height:44px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+  .atabs button[aria-selected="true"]{color:var(--ink);font-weight:600;border-color:var(--ink)}
+  .a3{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+  .qlist button{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:14px 16px}
+  .qlist button:first-child{border-top:0}
+  .qlist button[aria-pressed="true"]{background:var(--tint);box-shadow:inset 3px 0 0 var(--accent)}
+  .pv{overflow:hidden}.pv svg{display:block;width:100%;height:auto}
+  .qc{list-style:none;margin:0;padding:0}
+  .qc li{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--line)}
+  .qc li:first-child{border-top:0}
+  .qc .y{color:var(--paid);font-weight:600}.qc .n{color:#c62828;font-weight:600}
+  .acts2{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  kbd{font:500 12px var(--mono);border:1px solid var(--line-2);border-radius:4px;padding:0 5px;background:var(--card)}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl th,.tbl td{text-align:left;padding:10px 14px;border-top:1px solid var(--line);vertical-align:middle}
+  .tbl thead th{border-top:0;font-size:12px;font-weight:500;color:var(--muted)}
+  .tbl .r{text-align:right;font-family:var(--mono);white-space:nowrap}
+  .tbl tr.sub td{background:var(--canvas);padding:8px 14px 12px 40px}
+  .tbl a{color:var(--accent);text-decoration:none;white-space:nowrap}
+  .exp{border:0;background:none;padding:0;font-weight:600;display:inline-flex;gap:8px;align-items:center;min-height:36px}
+  .exp::before{content:"▸";color:var(--muted);transition:.15s}
+  .exp[aria-expanded="true"]::before{transform:rotate(90deg)}
+  .tag.live{border-color:var(--accent);color:var(--accent)}
+  pre.json{margin:0;padding:18px;font:400 13px/1.6 var(--mono);overflow:auto}
+  dialog label{display:block;font-size:13px;font-weight:500}
+  dialog select,dialog textarea{width:100%;border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;background:var(--card);margin:4px 0 12px;min-height:40px;font:inherit}
+
+  /* Nhà cung cấp */
+  .vlist{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  .voffer{overflow:hidden;animation:in .35s}
+  .voffer header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .voffer header b{display:block;font-weight:600}
+  .vcd{color:#8a4f00;background:#fdf1dc;border-radius:var(--pill);padding:3px 9px;white-space:nowrap;flex:none}
+  .vlab{margin:0;font-size:12px;color:var(--muted)}
+  .voffer .vbrief{padding:12px 14px 4px}
+  .voffer .vbrief p+p{margin:4px 0 0}
+  .voffer dl{margin:0;padding:6px 14px 10px}
+  .voffer dl div{display:flex;justify-content:space-between;padding:5px 0}
+  .voffer dt{color:var(--muted)} .voffer dd{margin:0;font-weight:600}
+  .voffer footer{display:flex;gap:8px;padding:0 14px 14px}
+  .voffer footer .btn{flex:1}
+  .vempty{padding:36px 20px;text-align:center;color:var(--muted)}
+  .vform{padding:16px;display:grid;gap:14px}
+  .vform label,.vlegend{display:block;font-size:13px;font-weight:500;margin:0 0 4px;padding:0}
+  .vin{width:100%;border:1px solid var(--line-2);border-radius:8px;min-height:44px;padding:0 12px;background:var(--card);min-width:0}
+  .vrow{display:flex;gap:8px}
+  .vok{display:inline-flex;align-items:center;gap:6px;background:#e3f3ea;color:var(--paid);border-radius:var(--pill);padding:3px 10px;font-size:12px;font-weight:600}
+  .vskills{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+  .vskills li{font:400 12px var(--mono);background:var(--tint);border-radius:6px;padding:3px 8px}
+  .vcaps{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;border:0;margin:0;padding:0;min-width:0}
+  .vcaps label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:0 12px;min-height:44px;margin:0;font-weight:400;cursor:pointer}
+  .vcaps input{width:18px;height:18px;accent-color:var(--ink);margin:0;flex:none}
+  .vfields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .vchips{display:flex;flex-wrap:wrap;gap:6px;border:0;margin:0 0 16px;padding:0}
+  .vchips legend{font-size:13px;font-weight:500;margin-bottom:8px;padding:0}
+  .vchips label{position:relative;margin:0}
+  .vchips input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+  .vchips span{display:inline-flex;align-items:center;border:1px solid var(--line-2);background:var(--card);border-radius:var(--pill);padding:0 14px;min-height:40px;font-size:13px;font-weight:400}
+  .vchips input:checked+span{background:var(--ink);border-color:var(--ink);color:#fff}
+  .vchips input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+  .desk .v02{max-width:640px}
+  @media (max-width:760px){.vfields{grid-template-columns:1fr}}
+  .phone .vfields{grid-template-columns:1fr}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:var(--pill);font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:9}
+  .toast.on{opacity:1;transform:translateX(-50%)}
+
+  @media (max-width:760px){
+    .app{grid-template-columns:1fr}
+    .rail{display:none}
+    .bar{padding:10px 12px;flex-wrap:wrap}
+    .bar .title{display:none}
+    .seg button{min-height:44px;min-width:44px}
+    .desk .topnav{gap:4px;padding:8px 10px;flex-wrap:wrap}
+    .desk .topnav .brand{display:none}
+    .desk .topnav button{min-height:44px;min-width:44px;padding:6px 8px;white-space:nowrap}
+    .bar select{display:block}
+    .view{padding:16px 0 32px}
+    .phone{width:100%;max-width:390px;border-radius:0;border-left:0;border-right:0;height:calc(100vh - 80px);max-height:none}
+    .desk{border-radius:0;border-left:0;border-right:0}
+    .desk .scroll{padding:18px}
+    .desk .p01,.desk .c02,.desk .c06,.desk .c10{grid-template-columns:1fr}
+    .desk .flow{flex-direction:column}
+    .desk .flow li{flex-direction:row;text-align:left}
+    .desk .flow li:not(:last-child)::after{left:13px;right:auto;top:36px;bottom:-10px;border-top:0;border-left:1px solid var(--line-2)}
+    .desk .hero h1{font-size:28px}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="Danh sách màn hình">
+    <div class="brand"><i></i>AI Studio</div>
+    <div id="railNav"></div>
+    <p class="rail-note">Prototype v0.1 · dữ liệu mẫu</p>
+  </aside>
+  <div class="stage">
+    <div class="bar">
+      <span class="title" id="barTitle"></span>
+      <label class="sr" for="screenSelect" style="position:absolute;left:-9999px">Chọn màn hình</label>
+      <select id="screenSelect"></select>
+      <div class="seg" role="group" aria-label="Khung xem">
+        <button data-mode="mobile" aria-pressed="true">Mobile</button>
+        <button data-mode="desktop" aria-pressed="false">Desktop</button>
+      </div>
+    </div>
+    <div class="view" id="view"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg" aria-labelledby="dlgText"><p id="dlgText"></p>
+  <div class="acts"><button class="btn" data-dlg="0">Huỷ</button><button class="btn primary" data-dlg="1" id="dlgOk"></button></div></dialog>
+<dialog id="rej" aria-labelledby="rejT"><form id="rejF"><p id="rejT" style="font-weight:600">Từ chối bản nháp</p>
+  <label for="rejR">Lý do</label><select id="rejR" required><option value="">Chọn lý do…</option><option>Không đúng brief</option><option>Sai màu thương hiệu</option><option>Lỗi chính tả</option><option>Chất lượng chưa đạt</option></select>
+  <label for="rejN">Ghi chú cho agent</label><textarea id="rejN" rows="3" required placeholder="VD: Tăng độ tương phản chữ nhỏ, giữ bố cục"></textarea>
+  <div class="acts"><button type="button" class="btn" data-rej>Huỷ</button><button class="btn primary">Từ chối & trả agent</button></div></form></dialog>
+<dialog id="vrej" aria-labelledby="vrejT"><form id="vrejF"><p id="vrejT" style="font-weight:600">Từ chối offer</p>
+  <fieldset class="vchips"><legend>Lý do</legend>
+    <label><input type="radio" name="vr" value="Quá tải" required><span>Quá tải</span></label>
+    <label><input type="radio" name="vr" value="Ngoài năng lực"><span>Ngoài năng lực</span></label>
+    <label><input type="radio" name="vr" value="Giá thấp"><span>Giá thấp</span></label>
+    <label><input type="radio" name="vr" value="Khác"><span>Khác</span></label></fieldset>
+  <div class="acts"><button type="button" class="btn" data-vrejx>Huỷ</button><button class="btn primary">Từ chối offer</button></div></form></dialog>
+
+<script>
+const fmt = n => n.toLocaleString("vi-VN").replace(/,/g, ".") + "đ";
+const I = {
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>',
+  orders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 5h14v10H10l-5 4z"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="9" r="4"/><path d="M4 20c1.5-4 4.5-5 8-5s6.5 1 8 5"/></svg>',
+  logo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="7"/><path d="M9 12h6"/></svg>',
+  post:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>',
+  video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+  web:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>',
+  send:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+};
+
+const state = { screen: "P-01", mode: "mobile", accepted: false, msgs: null, todos: [false, false],
+  qrEnd: 0, paid: false, feed: 1, ver: 2, rev: 2, approved: false,
+  pins: [{ x: 50, y: 73, text: "Chữ 'Mộc An' dày hơn chút" }, { x: 70, y: 27, text: "Đổi lá sang xanh rêu" }] };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const SERVICES = [
+  { icon: "logo", name: "Logo", desc: "3 phương án · 3 lượt sửa", from: 990000 },
+  { icon: "post", name: "Bộ 10 post", desc: "Facebook, Instagram, Zalo", from: 1490000 },
+  { icon: "video", name: "Video 15 giây", desc: "Dọc 9:16, có nhạc nền", from: 1990000 },
+  { icon: "web", name: "Landing page", desc: "1 trang, tên miền riêng", from: 3900000 }
+];
+const STEPS = ["Chat", "Báo giá", "Quét QR cọc", "Theo dõi", "Nhận file"];
+const CHIPS = ["Thêm phương án màu", "Giao nhanh 24 giờ", "Cần cả bảng hiệu", "Gặp chuyên viên"];
+const initMsgs = () => [
+  { who: "ai", text: "Chào bạn, mình là trợ lý AI của AI Studio. Bạn mô tả việc cần làm, mình báo giá trong 3 phút nhé." },
+  { who: "me", text: "Mình cần logo cho tiệm cà phê Mộc An ở Biên Hòa, tối giản" },
+  { who: "ai", text: "Đã hiểu. Đây là báo giá tạm cho logo tối giản, chuyên viên sẽ duyệt từng bản trước khi gửi bạn:" },
+  { who: "quote" }
+];
+
+const SCREENS = [
+  { id: "P-01", group: "Khách mới", name: "Trang chủ", tab: "home", render: renderHome },
+  { id: "P-02", group: "Khách mới", name: "Chat", tab: "chat", render: renderChat },
+  { id: "C-02", group: "Khách hàng", name: "Bảng điều khiển", tab: "orders", render: renderDash },
+  { id: "C-06", group: "Khách hàng", name: "Thanh toán VietQR", tab: "orders", render: renderPay },
+  { id: "C-09", group: "Khách hàng", name: "Tiến độ trực tiếp", tab: "orders", render: renderLive },
+  { id: "C-10", group: "Khách hàng", name: "Duyệt & sửa bản nháp", tab: "orders", render: renderReview },
+  { id: "A-02", group: "Quản trị", name: "Tổng quan", admin: true, render: renderA02 },
+  { id: "A-03", group: "Quản trị", name: "Hàng chờ duyệt", admin: true, render: renderA03 },
+  { id: "A-08", group: "Quản trị", name: "Chi tiết job", admin: true, render: renderA08 },
+  { id: "V-04", group: "Nhà cung cấp · Giai đoạn 3", name: "Hộp offer job", vendor: "offer", render: renderV04 },
+  { id: "V-02", group: "Nhà cung cấp · Giai đoạn 3", name: "Khai báo agent", vendor: "agent", render: renderV02 }
+];
+const PSTEPS = ["Xếp hàng", "Lên ý tưởng", "Sản xuất", "Kiểm tra chất lượng", "Chuyên viên duyệt", "Bạn duyệt", "Hoàn tất"];
+const EVENTS = [["14:02", "Mai · Thiết kế (AI) đã phân tích brief và brand kit"], ["14:09", "Đã tạo 6 hướng ý tưởng, chọn 3 hướng"],
+  ["14:21", "Đang dựng phương án 2 trên Figma"], ["14:28", "Kiểm tra màu và chính tả"]];
+const TABS = [
+  { id: "home", label: "Trang chủ", screen: "P-01" },
+  { id: "orders", label: "Đơn hàng", screen: "C-02" },
+  { id: "chat", label: "Chat", screen: "P-02" },
+  { id: "user", label: "Tài khoản", screen: "C-02" }
+];
+
+function renderHome() {
+  return `<div class="p01">
+    <div class="hero">
+      <span class="tag ai">Trợ lý AI · trực 24/7</span>
+      <h1>Thuê studio AI, nhận thiết kế trong 24 giờ.</h1>
+      <p>Trợ lý AI báo giá trong 3 phút, chuyên viên duyệt từng bản.</p>
+      <button class="btn primary ${state.mode === "mobile" ? "block" : ""}" data-go="P-02">${I.chat} Chat với trợ lý AI</button>
+      <div class="sec-h"><h3>Cách hoạt động</h3><span>5 bước</span></div>
+      <ol class="flow">${STEPS.map(s => `<li>${s}</li>`).join("")}</ol>
+    </div>
+    <div>
+      <div class="sec-h" style="${state.mode === "desktop" ? "margin-top:0" : ""}"><h3>Dịch vụ</h3><span class="tag">giá tạm</span></div>
+      <div class="card rows">${SERVICES.map(s => `
+        <div><span class="ico">${I[s.icon]}</span>
+          <span class="grow"><b style="font-weight:600">${s.name}</b><br><span class="muted" style="font-size:12px">${s.desc}</span></span>
+          <span class="price"><span class="muted" style="font-weight:400;font-size:12px">từ </span>${fmt(s.from)}</span></div>`).join("")}
+      </div>
+      <p class="muted" style="font-size:12px;margin:10px 2px 0">Giá chốt sau khi trợ lý AI báo giá theo yêu cầu cụ thể.</p>
+    </div>
+  </div>`;
+}
+
+function quoteCard() {
+  return `<article class="card quote" aria-label="Báo giá Q-2610-031">
+    <header><span class="mono">Q-2610-031</span><span class="tag">${state.accepted ? "Đã chấp nhận" : "Báo giá tạm"}</span></header>
+    <div class="spec"><b style="font-weight:600;width:100%">Logo tối giản · Mộc An</b>
+      <span class="tag">3 lượt sửa</span><span class="tag">48 giờ</span></div>
+    <dl><div><dt>Tạm tính</dt><dd>${fmt(1290000)}</dd></div>
+      <div><dt>Cọc 50%</dt><dd>${fmt(645000)}</dd></div></dl>
+    <footer>${state.accepted
+      ? `<button class="btn block" data-go="C-02">Theo dõi đơn hàng</button>`
+      : `<button class="btn primary block" data-act="accept">Xem &amp; chấp nhận</button>`}</footer>
+  </article>`;
+}
+
+function renderChat() {
+  if (!state.msgs) state.msgs = initMsgs();
+  return `<div class="chat">
+    <div class="chat-head"><span class="avatar">AI</span>
+      <div style="flex:1"><b style="font-weight:600">AI Studio</b><br><span class="muted" style="font-size:12px">Thường trả lời trong vài giây</span></div>
+      <span class="tag ai">Trợ lý AI</span></div>
+    <div class="msgs" id="msgs" aria-live="polite">${state.msgs.map(m =>
+      m.who === "quote" ? quoteCard()
+      : m.who === "typing" ? `<div class="msg ai"><span class="typing"><i></i><i></i><i></i></span></div>`
+      : `<div class="msg ${m.who}">${m.text}</div>`).join("")}</div>
+    <div class="chips">${CHIPS.map(c => `<button data-chip="${c}">${c}</button>`).join("")}</div>
+    <form class="composer" id="composer"><input id="msgIn" placeholder="Nhắn cho trợ lý AI…" aria-label="Tin nhắn" autocomplete="off">
+      <button class="btn dark" aria-label="Gửi">${I.send}</button></form>
+  </div>`;
+}
+
+function renderDash() {
+  const t = state.todos;
+  const left = t.filter(x => !x).length;
+  const todo = `<div class="card todo">
+      <div class="${t[0] ? "done" : ""}"><input type="checkbox" data-todo="0" ${t[0] ? "checked" : ""} aria-label="Đã duyệt">
+        <span style="flex:1"><span class="t">Duyệt bản nháp logo Mộc An</span><br><span class="mono muted">AIS-2610-0142</span></span>
+        <button class="btn" style="min-height:36px;padding:0 12px;font-size:13px" data-toast="Đang mở bản nháp v1…">Xem</button></div>
+      <div class="${t[1] ? "done" : ""}"><input type="checkbox" data-todo="1" ${t[1] ? "checked" : ""} aria-label="Đã thanh toán">
+        <span style="flex:1"><span class="t">Thanh toán còn lại ${fmt(645000)}</span><br><span class="muted" style="font-size:12px">Sau khi duyệt bản cuối</span></span>
+        <button class="btn" style="min-height:36px;padding:0 12px;font-size:13px" data-toast="Mã QR thanh toán đã sẵn sàng">Quét QR</button></div>
+    </div>`;
+  const order = `<div class="card" style="padding:16px">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span class="mono muted">AIS-2610-0142</span><span class="tag">Đang thiết kế</span></div>
+      <b style="font-weight:600;display:block;margin-top:8px">Logo tối giản · Mộc An</b>
+      <div class="prog" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" aria-label="Tiến độ"><i style="width:62%"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px"><span><b>62%</b></span><span class="muted">Dự kiến 16:30 hôm nay</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+        <span class="muted">Đã cọc</span><span class="paid">${fmt(645000)}</span></div>
+    </div>`;
+  const plan = `<div class="card" style="padding:16px">
+      <div style="display:flex;justify-content:space-between"><b style="font-weight:600">Gói Starter</b><span class="muted" style="font-size:13px">còn 6/10 credit</span></div>
+      <div class="credit" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < 4 ? "off" : ""}"></i>`).join("")}</div>
+    </div>`;
+  const cta = `<button class="btn primary block" data-go="P-02" style="margin-top:14px">Đặt việc mới</button>`;
+  const greet = `<div class="greet"><span class="muted" style="font-size:13px">Chào chị An,</span><h2>Mộc An Coffee</h2></div>`;
+  if (state.mode === "desktop") return `${greet}<div class="c02" style="margin-top:6px">
+    <div><div class="sec-h"><h3>Việc cần bạn làm</h3><span>${left} việc</span></div>${todo}
+      <div class="sec-h"><h3>Đơn đang chạy</h3><span>1 đơn</span></div>${order}</div>
+    <div><div class="sec-h"><h3>Gói dịch vụ</h3></div>${plan}${cta}</div></div>`;
+  return `${greet}<div class="sec-h"><h3>Việc cần bạn làm</h3><span>${left} việc</span></div>${todo}
+    <div class="sec-h"><h3>Đơn đang chạy</h3><span>1 đơn</span></div>${order}
+    <div class="sec-h"><h3>Gói dịch vụ</h3></div>${plan}${cta}`;
+}
+
+/* C-06 */
+function qrSvg() {
+  const N = 25, fin = (x, y) => (x < 8 && y < 8) || (x > N - 9 && y < 8) || (x < 8 && y > N - 9);
+  let s = 7, d = "";
+  const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!fin(x, y) && r() > .5) d += `M${x} ${y}h1v1h-1z`;
+  const f = (x, y) => `M${x} ${y}h7v7h-7zM${x + 1} ${y + 1}v5h5v-5zM${x + 2} ${y + 2}h3v3h-3z`;
+  return `<svg viewBox="-2 -2 29 29" role="img" aria-label="Mã VietQR chuyển khoản" shape-rendering="crispEdges">
+    <rect x="-2" y="-2" width="29" height="29" fill="#fff"/><path fill="#1c1b17" fill-rule="evenodd" d="${d}${f(0, 0)}${f(18, 0)}${f(0, 18)}"/></svg>`;
+}
+function cdText() {
+  const t = Math.max(0, Math.ceil((state.qrEnd - Date.now()) / 1000));
+  return t ? `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}` : "Hết hạn";
+}
+function renderPay() {
+  if (state.paid) return `<div class="card ok"><div class="tick"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2>Đã nhận cọc ${fmt(645000)}</h2><p>Đơn <span class="mono">AIS-2610-0142</span> đang xếp hàng</p>
+    <button class="btn primary block" data-go="C-09">Xem tiến độ</button></div>`;
+  if (!state.qrEnd) state.qrEnd = Date.now() + 899e3;
+  const row = (k, v, copy) => `<div><span class="grow"><span class="muted" style="font-size:12px">${k}</span><br><span class="val">${v}</span></span>
+    ${copy ? `<button class="copy" data-copy="${copy}" aria-label="Sao chép ${k.toLowerCase()}">Sao chép</button>` : ""}</div>`;
+  return `<div class="greet"><span class="muted" style="font-size:13px">Cọc 50% · Q-2610-031</span><h2>Thanh toán VietQR</h2></div>
+  <div class="c06" style="margin-top:14px">
+    <div class="card qr"><div class="bank"><b>MB</b>MB Bank</div>${qrSvg()}
+      <span class="muted" style="font-size:12px">Mã hết hạn sau</span><div class="cd" id="cd">${cdText()}</div></div>
+    <div><div class="card rows">${row("Số tài khoản", "0901 234 567", "0901234567")}${row("Chủ tài khoản", "HKD AI STUDIO")}
+      ${row("Số tiền", fmt(645000), "645000")}${row("Nội dung", "AIS2610142", "AIS2610142")}</div>
+      <p class="warn" role="note">⚠ Giữ nguyên nội dung chuyển khoản</p>
+      <button class="btn primary block" data-act="paid" style="margin-top:14px">Giả lập ngân hàng xác nhận</button>
+      <p class="note">Hệ thống chỉ xác nhận qua ngân hàng, không cần gửi ảnh chụp.</p></div>
+  </div>`;
+}
+
+/* C-09 */
+const evRow = e => `<div><span class="mono">${e[0]}</span><span>${e[1]}</span></div>`;
+function renderLive() {
+  const steps = `<div class="card" style="padding:16px 18px"><ol class="flow">${PSTEPS.map((s, i) =>
+    `<li class="${i < 2 ? "done" : i === 2 ? "now" : ""}"${i === 2 ? ' aria-current="step"' : ""}>${s}</li>`).join("")}</ol></div>`;
+  const persona = `<div class="card" style="padding:16px">
+    <div style="display:flex;gap:10px;align-items:center"><span class="avatar">M</span>
+      <div style="flex:1"><b style="font-weight:600">Mai</b><br><span class="muted" style="font-size:12px">Thiết kế (AI)</span></div><span class="tag ai">Trợ lý AI</span></div>
+    <div class="prog" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100" aria-label="Tiến độ"><i style="width:62%"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span><b>62%</b> · Sản xuất</span><span class="muted">Dự kiến 16:30 hôm nay</span></div></div>`;
+  const feed = `<div class="sec-h"><h3>Diễn biến</h3><span>cập nhật trực tiếp</span></div>
+    <div class="card feed" id="feed" aria-live="polite">${EVENTS.slice(0, state.feed).map(evRow).join("")}</div>`;
+  const head = `<div class="greet"><span class="mono muted">AIS-2610-0142</span><h2>Logo tối giản · Mộc An</h2></div>`;
+  if (state.mode === "desktop") return `${head}<div style="margin-top:14px">${steps}</div>
+    <div class="c02"><div>${feed}</div><div><div class="sec-h"><h3>Người phụ trách</h3></div>${persona}</div></div>`;
+  return `${head}<div style="margin:14px 0">${persona}</div>${steps}${feed}`;
+}
+
+/* C-10 */
+function logoSvg(v, clean) {
+  const leaf = v === 2 ? "#4f8a3c" : "#6aa84f", wm = "AI STUDIO · BẢN NHÁP · ";
+  return `<svg viewBox="0 0 300 300" role="img" aria-label="Logo Mộc An, bản nháp v${v}">
+    <rect width="300" height="300" fill="#f3ede3"/>
+    ${v === 2 ? '<circle cx="150" cy="112" r="64" fill="none" stroke="#2b1d12" stroke-width="2"/>' : ""}
+    <g transform="translate(140 118)">
+      <g transform="rotate(-25)"><ellipse rx="30" ry="42" fill="#5a3a22"/><path d="M-6 -36C10 -14-12 14 6 36" stroke="#f3ede3" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+      <path d="M24 -26C44 -56 74 -56 84 -48C76 -20 52 -8 24 -26Z" fill="${leaf}"/>
+      <path d="M28 -27C46 -38 64 -44 80 -47" stroke="#f3ede3" stroke-width="2" fill="none"/>
+    </g>
+    <text x="150" y="222" text-anchor="middle" font-family="Be Vietnam Pro, sans-serif" font-size="40" font-weight="600" fill="#2b1d12">Mộc An</text>
+    <text x="150" y="248" text-anchor="middle" font-family="Geist Mono, monospace" font-size="11" letter-spacing="4" fill="#7a6a58">COFFEE · BIÊN HÒA</text>
+    ${clean ? "" : `<g fill="#1c1b17" opacity=".1" font-family="Geist Mono, monospace" font-size="13" font-weight="500" transform="rotate(-35 150 150)">
+      ${[-90, -30, 30, 90, 150, 210, 270, 330, 390].map((y, i) => `<text x="${-200 + (i % 2) * 60}" y="${y}">${wm.repeat(4)}</text>`).join("")}</g>`}</svg>`;
+}
+function renderReview() {
+  const v = state.ver, P = state.pins;
+  const top = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+    <div class="seg" role="group" aria-label="Phiên bản" style="margin:0">${[1, 2].map(n => `<button data-ver="${n}" aria-pressed="${v === n}">v${n}</button>`).join("")}</div>
+    <span class="tag">Còn ${state.rev}/3 lượt sửa</span></div>`;
+  const art = `<div class="card art" id="art" tabindex="0" role="button" aria-label="Bấm vào ảnh để ghim góp ý">${logoSvg(v)}
+    ${P.map((p, i) => `<span class="pin" style="left:${p.x}%;top:${p.y}%">${i + 1}</span>`).join("")}</div>
+    <p class="note">Bấm vào ảnh để ghim góp ý.</p>`;
+  const list = `<div class="sec-h" style="${state.mode === "desktop" ? "margin-top:0" : ""}"><h3>Góp ý</h3><span>${P.length} ghim</span></div>
+    <div class="card rows pins">${P.length ? P.map((p, i) => `<div><span class="pnum">${i + 1}</span>${p.edit
+      ? `<input id="pin${i}" data-pin="${i}" value="${esc(p.text)}" placeholder="Nhập góp ý…" aria-label="Góp ý ${i + 1}" autocomplete="off">`
+      : `<span class="grow">${esc(p.text)}</span>`}</div>`).join("") : '<div class="muted">Chưa có góp ý</div>'}</div>
+    <div style="display:grid;gap:8px;margin-top:14px">
+      <button class="btn primary block" data-act="approve" ${state.approved ? "disabled" : ""}>${state.approved ? "Đã duyệt" : "Duyệt bản này"}</button>
+      <button class="btn block" data-act="revise" ${state.rev && !state.approved ? "" : "disabled"}>Gửi yêu cầu sửa</button></div>
+    <p class="aino"><span class="tag ai">AI</span>Nội dung có sử dụng AI — gắn nhãn khi đăng</p>`;
+  return `<div class="greet"><span class="mono muted">AIS-2610-0142</span><h2>Duyệt bản nháp</h2></div>
+    <div class="c10" style="margin-top:14px"><div>${top}${art}</div><div>${list}</div></div>`;
+}
+function addPin(x, y) {
+  state.pins.push({ x, y, text: "", edit: true }); render();
+  const el = $("#pin" + (state.pins.length - 1)); if (el) el.focus();
+}
+/* Quản trị */
+const num = n => n.toLocaleString("vi-VN").replace(/,/g, ".");
+const ADM = { sel: "moc", tab: 0, jtab: 0, open: {}, q: [
+  { id: "moc", name: "Mộc An – Logo", job: "AIS-2610-0142", wait: "chờ 18 phút", qc: 92, cost: "12.400đ · 38% ngân sách",
+    brief: "Logo tối giản cho tiệm cà phê Mộc An, Biên Hòa · nâu gỗ, xanh lá · 3 phương án · 3 lượt sửa",
+    checks: [["Đúng màu thương hiệu", 1], ["Không lỗi chính tả", 1], ["Tỷ lệ 1:1", 1], ["Độ tương phản chữ nhỏ", 0]] },
+  { id: "smile", name: "Nha khoa Smile – Bộ 10 post", qc: 88, brief: "Bộ 10 post cho Facebook, Instagram, Zalo" },
+  { id: "anphu", name: "BĐS An Phú – Landing page", qc: 79, brief: "Landing page 1 trang, tên miền riêng" }] };
+const sketch = id => `<svg viewBox="0 0 300 300" role="img" aria-label="Xem trước bản nháp"><rect width="300" height="300" fill="#eef3f6"/>${id === "smile"
+  ? [0, 1, 2].map(r => [0, 1, 2].map(c => `<rect x="${24 + c * 88}" y="${24 + r * 88}" width="76" height="76" rx="8" fill="${(r + c) % 2 ? "#cfe3ee" : "#fff"}"/>`).join("")).join("")
+  : '<rect x="24" y="24" width="252" height="22" rx="4" fill="#fff"/><rect x="24" y="60" width="252" height="110" rx="6" fill="#d9e4d2"/><rect x="24" y="184" width="160" height="12" rx="3" fill="#fff"/><rect x="24" y="204" width="210" height="12" rx="3" fill="#fff"/><rect x="24" y="236" width="90" height="34" rx="17" fill="#1c1b17"/>'}</svg>`;
+const tabsHtml = (list, cur, key) => `<div class="atabs" role="tablist">${list.map((x, i) => `<button role="tab" data-${key}="${i}" aria-selected="${cur === i}">${x}</button>`).join("")}</div>`;
+
+function renderA02() {
+  const rev = [1290, 2480, 990, 1490, 590, 3900, 1290, 1990, 990, 2480, 1490, 990, 2780, 1290];
+  const cost = [240, 410, 190, 280, 90, 480, 230, 350, 170, 390, 260, 180, 450, 186];
+  const X = i => 56 + i * 45, Y = v => 200 - v / 4000 * 180;
+  const bar = (x, v, c, t) => `<rect x="${x}" y="${Y(v)}" width="14" height="${200 - Y(v)}" rx="2" fill="${c}"><title>${t} ${fmt(v * 1000)}</title></rect>`;
+  const svg = `<svg class="csvg" viewBox="0 0 700 230" role="img" aria-label="Doanh thu và chi phí model 14 ngày, 15/10 đến 28/10">
+    ${[0, 1, 2, 3, 4].map(t => `<line x1="50" x2="690" y1="${Y(t * 1000)}" y2="${Y(t * 1000)}" stroke="var(--line)"/><text x="44" y="${Y(t * 1000) + 4}" text-anchor="end">${t ? t + " tr" : "0"}</text>`).join("")}
+    ${rev.map((r, i) => { const d = `${15 + i}/10`; return bar(X(i) + 6, r, "var(--ink)", d + " · doanh thu") + bar(X(i) + 22, cost[i], "var(--accent)", d + " · chi phí model")
+      + (i % 2 ? "" : `<text x="${X(i) + 21}" y="222" text-anchor="middle">${d}</text>`); }).join("")}</svg>`;
+  const kpi = (l, v, s) => `<div class="card kpi"><span>${l}</span><b>${v}</b><small>${s || "&nbsp;"}</small></div>`;
+  const alerts = [["hi", "Webhook payOS sai chữ ký", "1 lần"], ["hi", "Job AIS-2610-0139 đứng", "25 phút"], ["", "Thanh toán lệch 5.000đ", "cần xem"]];
+  return `<div class="greet"><h2>Tổng quan</h2></div>
+    <div class="kpis" style="margin-top:14px">${kpi("Doanh thu tháng", "38.450.000đ", '<span class="up">▲12%</span> so với tháng trước')}${kpi("Đơn mới hôm nay", "7")}${kpi("Chờ duyệt", "4")}
+      ${kpi("Chi phí model hôm nay", "186.000đ", "trần 500.000đ")}${kpi("Lãi gộp TB 30 ngày", "81%")}</div>
+    <div class="card" style="padding:14px 16px;margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>Doanh thu lũy kế năm</span><span><b>412.000.000đ</b> <span class="muted">/ ngưỡng 1 tỷ</span></span></div>
+      <div class="prog" role="progressbar" aria-valuenow="41" aria-valuemin="0" aria-valuemax="100" aria-label="Doanh thu lũy kế năm"><i style="width:41.2%"></i></div></div>
+    <div class="a2"><div><div class="sec-h"><h3>Doanh thu và chi phí model</h3><span class="legend"><span><i style="background:var(--ink)"></i>Doanh thu</span><span><i style="background:var(--accent)"></i>Chi phí model</span></span></div>
+      <div class="card" style="padding:16px">${svg}</div></div>
+      <div><div class="sec-h"><h3>Cảnh báo</h3><span>${alerts.length} mục</span></div>
+      <div class="card rows">${alerts.map(a => `<div><span class="sev ${a[0]}"></span><span class="grow">${a[1]} <span class="muted">· ${a[2]}</span></span><button class="copy" data-toast="Đã mở: ${a[1]}">Xem</button></div>`).join("")}</div></div></div>
+    <p class="note" style="margin-top:18px">Cập nhật lúc 14:35 (GMT+7)</p>`;
+}
+
+function renderA03() {
+  const head = `<div class="greet"><h2>Hàng chờ duyệt</h2></div>` + tabsHtml([`Bản nháp (${ADM.q.length})`, "Báo giá (1)", "Thanh toán cần xem (1)"], ADM.tab, "atab");
+  if (ADM.tab) return head + `<div class="card muted" style="padding:28px;text-align:center">${ADM.tab === 1 ? "1 báo giá chờ duyệt" : "1 thanh toán lệch 5.000đ cần xem"} · chi tiết chưa có trong bản mẫu</div>`;
+  if (!ADM.q.length) return head + `<div class="card muted" style="padding:28px;text-align:center">Đã duyệt hết bản nháp</div>`;
+  const it = ADM.q.find(x => x.id === ADM.sel) || ADM.q[0]; ADM.sel = it.id;
+  const list = `<div class="card qlist">${ADM.q.map(x => `<button data-qsel="${x.id}" aria-pressed="${x.id === it.id}"><span style="font-weight:600">${x.name}</span><br>
+    <span class="muted" style="font-size:12px">${x.wait ? x.wait + " · " : ""}QC ${x.qc}/100</span></button>`).join("")}</div>`;
+  const panel = `<div class="card" style="display:grid;grid-template-columns:240px 1fr;gap:20px;padding:18px">
+    <div><div class="card pv">${it.id === "moc" ? logoSvg(2, true) : sketch(it.id)}</div><p class="note">QC ${it.qc}/100</p></div>
+    <div>${it.job ? `<span class="mono muted">${it.job}</span>` : ""}<h3 style="margin:2px 0 6px;font-size:17px">${it.name}</h3><p class="muted" style="margin:0">${it.brief}</p>
+      <div class="sec-h" style="margin-top:16px"><h3>Kiểm tra QC</h3></div>
+      ${it.checks ? `<ul class="qc">${it.checks.map(c => `<li>${c[0]}<span class="${c[1] ? "y" : "n"}">${c[1] ? "✓" : "✗"}</span></li>`).join("")}</ul>` : '<p class="muted" style="margin:0">Chưa có checklist chi tiết</p>'}
+      ${it.cost ? `<p class="note">Chi phí đến giờ ${it.cost}</p>` : ""}
+      <div class="acts2"><button class="btn primary" data-q="approve">Duyệt & gửi khách</button><button class="btn" data-q="reject">Từ chối</button>
+        <button class="btn" data-toast="Chọn file thay thế cho ${it.name}">Thay file</button><button class="btn" data-toast="Đã chuyển cấp cho trưởng nhóm thiết kế">Chuyển cấp</button></div>
+      <p class="note">Phím tắt <kbd>A</kbd> / <kbd>R</kbd> / <kbd>J</kbd> / <kbd>K</kbd></p></div></div>`;
+  return head + `<div class="a3">${list}${panel}</div>`;
+}
+function qDone(msg) {
+  const i = ADM.q.findIndex(x => x.id === ADM.sel); if (i < 0) return;
+  const [it] = ADM.q.splice(i, 1); ADM.sel = (ADM.q[i] || ADM.q[i - 1] || {}).id; render(); toast(msg(it));
+}
+function qMove(d) { const i = ADM.q.findIndex(x => x.id === ADM.sel), n = ADM.q[i + d]; if (n) { ADM.sel = n.id; render(); } }
+
+const RUNS = [
+  ["dieu-phoi", "T0", "qwen3.7-flash", 3120, 210, "8 giây", [["gbrain.search", "brand kit Mộc An", "0,4 giây"]]],
+  ["thiet-ke", "T2", "claude-sonnet-5.5", 48900, 11600, "6 phút 12 giây", [["gbrain.search", "logo cà phê tối giản", "0,6 giây"], ["figma.create_frame", "300×300 · phương án 2", "2,1 giây"], ["canva.autofill", "mockup ly, bảng hiệu", "3,4 giây"]]],
+  ["kiem-tra", "T1", "claude-haiku-5.5", 6400, 590, "41 giây", [["gbrain.search", "quy tắc màu, chính tả", "0,3 giây"]]]];
+const BRIEF = { job: "AIS-2610-0142", service: "logo", brand: "Mộc An", industry: "cà phê", location: "Biên Hòa", style: "tối giản",
+  colors: { primary: "#5a3a22", accent: "#4f8a3c", background: "#f3ede3" }, deliverables: ["3 phương án logo", "SVG", "PNG 3000×3000"], revisions: 3 };
+function renderA08() {
+  const head = `<div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap"><div class="greet"><span class="mono muted">AIS-2610-0142</span>
+    <h2>Logo tối giản · Mộc An <span class="tag live" style="vertical-align:4px">Sản xuất</span></h2></div>
+    <div class="acts2" style="margin:0 0 0 auto">${["Thử lại", "Giao lại", "Tạm dừng", "Tăng ngân sách"].map(b => `<button class="btn" data-toast="${b}: đã ghi nhận cho AIS-2610-0142">${b}</button>`).join("")}</div></div>`
+    + tabsHtml(["Agent runs", "Chi phí", "Brief JSON"], ADM.jtab, "jtab");
+  if (ADM.jtab === 1) return head + `<div class="card" style="padding:16px 18px"><div style="display:flex;justify-content:space-between;font-size:13px"><span>Đã tiêu <b>12.400đ</b></span><span class="muted">Ngân sách 32.250đ</span></div>
+      <div class="prog" role="progressbar" aria-valuenow="38" aria-valuemin="0" aria-valuemax="100" aria-label="Chi phí so với ngân sách"><i style="width:38%"></i></div><span class="note">38% ngân sách</span></div>
+    <div class="kpis" style="grid-template-columns:repeat(2,1fr);margin-top:12px"><div class="card kpi"><span>Doanh thu</span><b>1.290.000đ</b></div><div class="card kpi"><span>Lãi gộp</span><b>97%</b></div></div>`;
+  if (ADM.jtab === 2) return head + `<div class="card"><pre class="json">${esc(JSON.stringify(BRIEF, null, 2))}</pre></div>`;
+  return head + `<div class="card" style="overflow:hidden"><table class="tbl"><thead><tr><th>Agent</th><th>Tầng</th><th>Model</th><th class="r">Tokens</th><th class="r">Chi phí</th><th>Thời gian</th><th></th></tr></thead><tbody>
+    ${RUNS.map((r, i) => `<tr><td><button class="exp" data-exp="${i}" aria-expanded="${!!ADM.open[i]}">${r[0]}</button></td><td><span class="tag">${r[1]}</span></td><td class="mono">${r[2]}</td>
+      <td class="r">${num(r[3])}</td><td class="r">${fmt(r[4])}</td><td>${r[5]}</td><td><a href="https://cloud.langfuse.com" target="_blank" rel="noopener">Langfuse ↗</a></td></tr>
+      ${ADM.open[i] ? `<tr class="sub"><td colspan="7">${r[6].map(t => `<div class="mono" style="padding:3px 0">${t[0]} <span class="muted">“${t[1]}” · ${t[2]}</span></div>`).join("")}</td></tr>` : ""}`).join("")}
+    <tr><td colspan="3" style="font-weight:600">Tổng</td><td class="r">${num(58420)}</td><td class="r">${fmt(12400)}</td><td colspan="2"></td></tr></tbody></table></div>
+    <p class="note">Bấm tên agent để xem các lần gọi công cụ.</p>`;
+}
+
+const VEN = { rej: null, check: 0, url: "https://agent.example.vn/.well-known/agent-card.json",
+  caps: { "Thiết kế post": true, "Banner": true, "Logo": false, "Video ngắn": false, "Landing page": false }, floor: "", sla: "", cap: "",
+  offers: [
+    { id: "o1", cap: "Thiết kế bộ post", brief: "Bộ 10 post Facebook cho phòng khám nha khoa, tone tin cậy", pay: 420000, due: "24 giờ", left: 598 },
+    { id: "o2", cap: "Thiết kế bộ post", brief: "Bộ 6 post Instagram cho tiệm bánh, tone ấm áp", pay: 280000, due: "24 giờ", left: 872 },
+    { id: "o3", cap: "Banner", brief: "Đổi kích thước 1 banner khuyến mãi sang 5 định dạng", pay: 150000, due: "12 giờ", left: 1325 }
+  ].map(o => ({ ...o, end: Date.now() + o.left * 1000 })) };
+const VTABS = [{ id: "offer", label: "Offer", icon: "orders", screen: "V-04" }, { id: "agent", label: "Agent", icon: "user", screen: "V-02" }];
+const vcd = o => { const s = Math.max(0, Math.ceil((o.end - Date.now()) / 1000)); return `Tự hết hạn sau ${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+function renderV04() {
+  const n = VEN.offers.length;
+  const head = `<div class="greet"><h2>Hộp offer job</h2></div><div class="sec-h" style="margin-top:6px"><h3>Offer mới</h3><span>${n} offer · tự hết hạn nếu không phản hồi</span></div>`;
+  if (!n) return head + `<div class="card vempty">Chưa có offer mới — giữ agent trực tuyến để nhận job</div>`;
+  return head + `<div class="vlist">${VEN.offers.map(o => `<article class="card voffer" aria-label="Offer ${esc(o.cap)}">
+    <header><div><span class="vlab">Năng lực</span><b>${o.cap}</b></div><span class="mono vcd" data-ocd="${o.id}" role="timer">${vcd(o)}</span></header>
+    <div class="vbrief"><p class="vlab">Tóm tắt brief đã ẩn thông tin cá nhân</p><p>${o.brief}</p></div>
+    <dl><div><dt>Thù lao</dt><dd>${fmt(o.pay)}</dd></div><div><dt>Hạn giao</dt><dd>${o.due}</dd></div></dl>
+    <footer><button class="btn primary" data-vacc="${o.id}">Nhận job</button><button class="btn" data-vrej="${o.id}">Từ chối</button></footer></article>`).join("")}</div>`;
+}
+function vDrop(id, msg) { VEN.offers = VEN.offers.filter(o => o.id !== id); if (state.screen === "V-04") render(); toast(msg); }
+function renderV02() {
+  const v = VEN.check, card = v === 2 ? `<div class="card vform">
+      <div><span class="vok">✓ Chữ ký hợp lệ · A2A</span><h3 style="margin:10px 0 0;font-size:17px">PixelCrew Designer</h3></div>
+      <div><span class="vlegend">Kỹ năng</span><ul class="vskills"><li>social-post-design</li><li>banner-resize</li><li>brand-kit-apply</li></ul></div>
+      <div role="group" aria-labelledby="vcapsL"><span class="vlegend" id="vcapsL">Năng lực nhận job</span><div class="vcaps">
+        ${Object.keys(VEN.caps).map(k => `<label><input type="checkbox" data-vcap="${k}" ${VEN.caps[k] ? "checked" : ""}>${k}</label>`).join("")}</div></div>
+      <div class="vfields">
+        <div><label for="vfloor">Giá sàn (đ)</label><input class="vin" id="vfloor" data-vf="floor" inputmode="numeric" placeholder="300.000" value="${esc(VEN.floor)}"></div>
+        <div><label for="vsla">SLA (giờ)</label><input class="vin" id="vsla" data-vf="sla" type="number" min="1" placeholder="24" value="${esc(VEN.sla)}"></div>
+        <div><label for="vcap">Sức chứa (job song song)</label><input class="vin" id="vcap" data-vf="cap" type="number" min="1" placeholder="3" value="${esc(VEN.cap)}"></div></div>
+      <button class="btn primary block" data-vsub>Gửi đăng ký</button></div>` : "";
+  return `<div class="v02"><div class="greet"><h2>Khai báo agent</h2></div>
+    <div class="card vform" style="margin:14px 0 12px"><div><label for="vurl">Agent Card URL</label>
+      <div class="vrow"><input class="vin" id="vurl" data-vf="url" type="url" value="${esc(VEN.url)}"><button class="btn dark" data-vchk ${v === 1 ? "disabled" : ""}>${v === 1 ? '<span class="typing" aria-label="Đang kiểm tra"><i></i><i></i><i></i></span>' : "Kiểm tra"}</button></div></div></div>
+    ${card}
+    <p class="aino">Agent chạy trên hạ tầng của bạn. AI Studio gửi job qua A2A, giữ tiền qua đối tác escrow, hoa hồng nền tảng 20%.</p></div>`;
+}
+
+let dlgCb = null;
+function ask(text, ok, cb) { $("#dlgText").textContent = text; $("#dlgOk").textContent = ok; dlgCb = cb; $("#dlg").showModal(); }
+
+const $ = s => document.querySelector(s);
+function current() { return SCREENS.find(s => s.id === state.screen) || SCREENS[0]; }
+
+function buildNav() {
+  const groups = [...new Set(SCREENS.map(s => s.group))];
+  $("#railNav").innerHTML = groups.map(g => `<h6>${g}</h6><nav>${SCREENS.filter(s => s.group === g)
+    .map(s => `<button data-go="${s.id}"><span class="mono">${s.id}</span>${s.name}</button>`).join("")}</nav>`).join('<div style="height:14px"></div>');
+  $("#screenSelect").innerHTML = SCREENS.map(s => `<option value="${s.id}">${s.id} · ${s.name}</option>`).join("");
+}
+
+function render() {
+  const sc = current();
+  document.querySelectorAll("#railNav button").forEach(b => b.setAttribute("aria-current", b.dataset.go === sc.id));
+  $("#screenSelect").value = sc.id;
+  $("#barTitle").innerHTML = `<span class="mono muted">${sc.id}</span> &nbsp;${sc.name}`;
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === state.mode));
+  const body = sc.render();
+  if (sc.admin) {
+    const a = `<div class="desk adm"><div class="atop">Bảng quản trị · Hôm nay 28/10/2026<span class="mono muted">Quản trị viên</span></div><div class="scroll">${body}</div></div>`;
+    $("#view").innerHTML = state.mode === "mobile" ? `<div class="admm" tabindex="0" aria-label="Bố cục desktop thu nhỏ, cuộn để xem">${a}</div>` : `<div class="admx">${a}</div>`;
+  } else if (sc.vendor) {
+    $("#view").innerHTML = state.mode === "mobile" ? `<div class="phone"><div class="status"><span>9:41</span><span>5G ▮▮▮</span></div>
+      <div class="scroll">${body}</div>
+      <nav class="tabbar" style="grid-template-columns:repeat(2,1fr)" aria-label="Điều hướng nhà cung cấp">${VTABS.map(t => `<button data-go="${t.screen}" aria-current="${t.id === sc.vendor}">${I[t.icon]}${t.label}</button>`).join("")}</nav></div>`
+      : `<div class="desk"><div class="topnav"><div class="brand" style="padding:0;margin-right:12px"><i></i>AI Studio · Nhà cung cấp</div>
+      ${VTABS.map(t => `<button data-go="${t.screen}" aria-current="${t.id === sc.vendor}">${t.label}</button>`).join("")}</div><div class="scroll">${body}</div></div>`;
+  } else if (state.mode === "mobile") {
+    $("#view").innerHTML = `<div class="phone"><div class="status"><span>9:41</span><span>5G ▮▮▮</span></div>
+      <div class="scroll" ${sc.id === "P-02" ? 'style="display:flex;flex-direction:column"' : ""}>${body}</div>
+      <nav class="tabbar" aria-label="Điều hướng ứng dụng">${TABS.map(t => `<button data-go="${t.screen}" aria-current="${t.id === sc.tab}">${I[t.id]}${t.label}</button>`).join("")}</nav></div>`;
+  } else {
+    $("#view").innerHTML = `<div class="desk"><div class="topnav"><div class="brand" style="padding:0;margin-right:12px"><i></i>AI Studio</div>
+      ${TABS.slice(0, 3).map(t => `<button data-go="${t.screen}" aria-current="${t.id === sc.tab}">${t.label}</button>`).join("")}
+      <button data-go="C-02" style="margin-left:auto">Tài khoản</button></div><div class="scroll">${body}</div></div>`;
+  }
+  const m = $("#msgs"); if (m) m.scrollTop = m.scrollHeight;
+}
+
+function go(id) { state.screen = id; history.replaceState(null, "", "#" + id); render(); }
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 1800); }
+
+function send(text) {
+  text = text.trim(); if (!text) return;
+  state.msgs.push({ who: "me", text }, { who: "typing" }); render();
+  setTimeout(() => {
+    state.msgs.pop();
+    state.msgs.push({ who: "ai", text: `Đã ghi nhận “${text}”. Mình sẽ cập nhật báo giá và chuyển cho chuyên viên duyệt trong ít phút.` });
+    if (state.screen === "P-02") render();
+  }, 900);
+}
+
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]"); if (g) return go(g.dataset.go);
+  const m = e.target.closest("[data-mode]"); if (m) { state.mode = m.dataset.mode; return render(); }
+  const c = e.target.closest("[data-chip]"); if (c) return send(c.dataset.chip);
+  const t = e.target.closest("[data-toast]"); if (t) return toast(t.dataset.toast);
+  const at = e.target.closest("[data-atab]"); if (at) { ADM.tab = +at.dataset.atab; return render(); }
+  const jt = e.target.closest("[data-jtab]"); if (jt) { ADM.jtab = +jt.dataset.jtab; return render(); }
+  const qs = e.target.closest("[data-qsel]"); if (qs) { ADM.sel = qs.dataset.qsel; return render(); }
+  const ex = e.target.closest("[data-exp]"); if (ex) { ADM.open[ex.dataset.exp] = !ADM.open[ex.dataset.exp]; return render(); }
+  const q = e.target.closest("[data-q]");
+  if (q) return q.dataset.q === "approve" ? qDone(it => `Đã duyệt & gửi khách: ${it.name}`) : ($("#rejF").reset(), $("#rej").showModal());
+  if (e.target.closest("[data-rej]")) return $("#rej").close();
+  const va = e.target.closest("[data-vacc]"); if (va) return vDrop(va.dataset.vacc, "Đã nhận, job chuyển vào không gian làm việc");
+  const vr = e.target.closest("[data-vrej]"); if (vr) { VEN.rej = vr.dataset.vrej; $("#vrejF").reset(); return $("#vrej").showModal(); }
+  if (e.target.closest("[data-vrejx]")) return $("#vrej").close();
+  if (e.target.closest("[data-vchk]")) {
+    VEN.check = 1; render();
+    return setTimeout(() => { VEN.check = 2; if (state.screen === "V-02") render(); }, 1000);
+  }
+  if (e.target.closest("[data-vsub]")) {
+    const miss = [["floor", "vfloor"], ["sla", "vsla"], ["cap", "vcap"]].find(f => !String(VEN[f[0]]).trim());
+    if (!Object.values(VEN.caps).some(Boolean)) return toast("Chọn ít nhất một năng lực");
+    if (miss) { $("#" + miss[1]).focus(); return toast("Điền đủ Giá sàn, SLA và Sức chứa"); }
+    return toast("Đã gửi, chờ job thử");
+  }
+  if (e.target.closest('[data-act="accept"]')) {
+    state.accepted = true;
+    state.msgs.push({ who: "ai", text: `Cảm ơn bạn! Quét mã QR để cọc ${fmt(645000)}, đơn bắt đầu ngay khi nhận cọc.` });
+    go("C-06"); toast("Đã chấp nhận báo giá Q-2610-031");
+  }
+  const d = e.target.closest("[data-dlg]");
+  if (d) { $("#dlg").close(); if (d.dataset.dlg === "1" && dlgCb) dlgCb(); return; }
+  const cp = e.target.closest("[data-copy]");
+  if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).catch(() => {}); return toast("Đã sao chép " + cp.dataset.copy); }
+  if (e.target.closest('[data-act="paid"]')) { state.paid = true; render(); return toast("Ngân hàng đã xác nhận giao dịch"); }
+  const vb = e.target.closest("[data-ver]"); if (vb) { state.ver = +vb.dataset.ver; return render(); }
+  const art = e.target.closest("#art");
+  if (art) { const r = art.getBoundingClientRect(); return addPin(+((e.clientX - r.left) / r.width * 100).toFixed(1), +((e.clientY - r.top) / r.height * 100).toFixed(1)); }
+  if (e.target.closest('[data-act="approve"]')) return ask(`Sau khi duyệt, thanh toán phần còn lại ${fmt(645000)} để nhận file gốc`, "Duyệt bản này", () => {
+    state.approved = true; state.todos[0] = true; render(); toast(`Đã duyệt bản v${state.ver}`); });
+  if (e.target.closest('[data-act="revise"]')) return ask(`Sẽ dùng 1 lượt, còn lại ${state.rev - 1}`, "Gửi yêu cầu", () => {
+    state.rev--; state.pins = state.pins.filter(p => p.text.trim()).map(p => ({ ...p, edit: false }));
+    render(); toast(`Đã gửi ${state.pins.length} góp ý · còn ${state.rev} lượt sửa`); });
+});
+document.addEventListener("input", e => { if (e.target.dataset.vf) VEN[e.target.dataset.vf] = e.target.value;
+  if (e.target.dataset.vcap) VEN.caps[e.target.dataset.vcap] = e.target.checked; if (e.target.dataset.pin != null) state.pins[+e.target.dataset.pin].text = e.target.value; });
+document.addEventListener("keydown", e => {
+  if (e.target.id === "art" && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); addPin(50, 50); }
+  if (e.target.dataset.pin != null && e.key === "Enter") e.target.blur();
+  if (state.screen === "A-03" && !ADM.tab && ADM.q.length && !e.ctrlKey && !e.metaKey && !e.altKey
+    && !document.querySelector("dialog[open]") && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) {
+    const k = e.key.toLowerCase();
+    if (k === "a") qDone(it => `Đã duyệt & gửi khách: ${it.name}`);
+    else if (k === "r") { $("#rejF").reset(); $("#rej").showModal(); }
+    else if (k === "j") qMove(1);
+    else if (k === "k") qMove(-1);
+  }
+});
+setInterval(() => { const c = $("#cd"); if (c) c.textContent = cdText(); }, 1000);
+setInterval(() => {
+  VEN.offers.forEach(o => { const el = document.querySelector(`[data-ocd="${o.id}"]`); if (el) el.textContent = vcd(o); });
+  const gone = VEN.offers.find(o => o.end <= Date.now()); if (gone) vDrop(gone.id, `Offer “${gone.cap}” đã tự hết hạn`);
+}, 1000);
+setInterval(() => {
+  if (state.screen !== "C-09" || state.feed >= EVENTS.length) return;
+  const f = $("#feed"); if (f) f.insertAdjacentHTML("beforeend", evRow(EVENTS[state.feed++]));
+}, 4000);
+document.addEventListener("change", e => {
+  if (e.target.id === "screenSelect") go(e.target.value);
+  if (e.target.dataset.todo != null) { state.todos[+e.target.dataset.todo] = e.target.checked; render(); }
+});
+document.addEventListener("submit", e => {
+  if (e.target.id === "composer") { e.preventDefault(); const v = $("#msgIn").value; send(v); }
+  if (e.target.id === "vrejF") { e.preventDefault(); const r = new FormData(e.target).get("vr"); $("#vrej").close(); vDrop(VEN.rej, `Đã từ chối offer · ${r}`); }
+  if (e.target.id === "rejF") { e.preventDefault(); const r = $("#rejR").value; $("#rej").close(); qDone(it => `Đã từ chối ${it.name} · ${r} · đã gửi ghi chú cho agent`); }
+});
+
+buildNav();
+const h = location.hash.slice(1); if (SCREENS.some(s => s.id === h)) state.screen = h;
+render();
+</script>
+</body>
+</html>
